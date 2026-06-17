@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.py[cod]
+
+.streamlit/secrets.toml
+
+data/output/*_verify.xlsx
+data/output/_*.xlsx
+
+.DS_Store
+Thumbs.db
