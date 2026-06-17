@@ -8,6 +8,12 @@ This project crawls KBO 2026 season game data from the official schedule endpoin
 python src/main.py --year 2026 --months 1-12
 ```
 
+To commit the regenerated data files and push them to GitHub after a successful crawl:
+
+```bash
+python src/main.py --year 2026 --months 1-12 --push
+```
+
 You can also narrow the crawl to a smaller range while testing:
 
 ```bash
@@ -19,6 +25,13 @@ python src/main.py --year 2026 --months 6
 ```bash
 .venv\Scripts\python.exe -m streamlit run src/dashboard.py
 ```
+
+For Streamlit Community Cloud, deploy this repository with:
+
+- Branch: `main`
+- Main file path: `streamlit_app.py`
+
+After the first Cloud deployment, running the crawler with `--push` updates GitHub and triggers Streamlit Cloud to refresh the app from the latest commit.
 
 ## Output
 
