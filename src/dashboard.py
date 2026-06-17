@@ -836,9 +836,18 @@ def paired_team_bar(
 def result_count_bar(counts: pd.DataFrame, category_column: str, x_title: str) -> go.Figure:
 	plot_frame = counts.copy()
 	categories = plot_frame[category_column].astype(str).tolist()
+	wins = plot_frame["W"] if "W" in plot_frame.columns else pd.Series(0, index=plot_frame.index)
+	losses = plot_frame["L"] if "L" in plot_frame.columns else pd.Series(0, index=plot_frame.index)
+	draws = plot_frame["D"] if "D" in plot_frame.columns else pd.Series(0, index=plot_frame.index)
+	totals = wins + losses + draws
+	decision_games = wins + losses
+	win_pct_labels = [
+		f"승률 {win / decision:.3f}" if decision else ""
+		for win, decision in zip(wins, decision_games)
+	]
 	fig = go.Figure()
 	for result in RESULT_BAR_ORDER:
-		values = plot_frame[result] if result in plot_frame.columns else pd.Series([0] * len(plot_frame))
+		values = plot_frame[result] if result in plot_frame.columns else pd.Series(0, index=plot_frame.index)
 		fig.add_bar(
 			x=categories,
 			y=values,
@@ -851,6 +860,20 @@ def result_count_bar(counts: pd.DataFrame, category_column: str, x_title: str) -
 			cliponaxis=False,
 		)
 	fig.update_traces(texttemplate="%{text}", textfont_color="#F8FAFB" if ACTIVE_DARK_MODE else "#FFFFFF")
+	fig.add_trace(
+		go.Scatter(
+			x=categories,
+			y=totals,
+			mode="text",
+			text=win_pct_labels,
+			textposition="top center",
+			textfont=dict(color="#DCE5E9" if ACTIVE_DARK_MODE else "#37474F", size=12),
+			hoverinfo="skip",
+			showlegend=False,
+		)
+	)
+	if not totals.empty and totals.max() > 0:
+		fig.update_yaxes(range=[0, max(1, totals.max() * 1.22)])
 	fig.update_layout(
 		barmode="stack",
 		legend_traceorder="normal",
@@ -876,6 +899,13 @@ def build_result_counts(frame: pd.DataFrame, category_column: str, categories: l
 		counts[category_column] = pd.Categorical(counts[category_column], categories=categories, ordered=True)
 		counts = counts.sort_values(category_column)
 	return counts[[category_column, *RESULT_LEGEND_ORDER]]
+
+
+def order_by_reference(values: list[str], reference: list[str]) -> list[str]:
+	value_set = set(values)
+	ordered = [value for value in reference if value in value_set]
+	ordered.extend(value for value in sorted(value_set) if value not in ordered)
+	return ordered
 
 
 def format_heatmap_value(value: Any, metric: str) -> str:
@@ -998,12 +1028,13 @@ def filter_data(schedule: pd.DataFrame, team: pd.DataFrame) -> tuple[pd.DataFram
 	schedule = schedule[schedule["game_status"] == "final"].copy()
 	team = team[team["is_final"]].copy()
 	year_options = sorted(schedule["season_year_label"].dropna().unique().tolist())
+	default_years = ["2026"] if "2026" in year_options else year_options[-1:]
 	month_options = sorted(schedule["source_month_label"].dropna().unique().tolist())
 	team_options = sorted(team["team"].dropna().astype(str).unique().tolist())
 
 	with st.sidebar:
 		st.header("필터")
-		selected_years = st.multiselect("연도", year_options, default=year_options)
+		selected_years = st.multiselect("연도", year_options, default=default_years)
 		selected_months = st.multiselect("월", month_options, default=month_options)
 		selected_teams = st.multiselect("팀", team_options, default=team_options)
 		selected_home_away = st.multiselect("홈/원정", HOME_AWAY_ORDER, default=HOME_AWAY_ORDER)
@@ -1107,8 +1138,8 @@ def render_overview(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 			st.plotly_chart(fig, width="stretch")
 
 
-def render_team_detail(team: pd.DataFrame) -> None:
-	teams = sorted(team["team"].dropna().astype(str).unique().tolist())
+def render_team_detail(team: pd.DataFrame, rank_order: list[str]) -> None:
+	teams = order_by_reference(team["team"].dropna().astype(str).unique().tolist(), rank_order)
 	if not teams:
 		st.info("선택한 조건에 팀 데이터가 없습니다.")
 		return
@@ -1436,7 +1467,7 @@ def main() -> None:
 	with overview_tab:
 		render_overview(filtered_schedule, filtered_team)
 	with team_tab:
-		render_team_detail(filtered_team)
+		render_team_detail(filtered_team, rank_order)
 	with matchup_tab:
 		render_matchups(filtered_team, rank_order)
 	with attendance_tab:
