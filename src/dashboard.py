@@ -842,7 +842,7 @@ def result_count_bar(counts: pd.DataFrame, category_column: str, x_title: str) -
 	totals = wins + losses + draws
 	decision_games = wins + losses
 	win_pct_labels = [
-		f"승률 {win / decision:.3f}" if decision else ""
+		f"{win / decision:.3f}" if decision else ""
 		for win, decision in zip(wins, decision_games)
 	]
 	fig = go.Figure()
