@@ -1,6 +1,6 @@
 # KBO Schedule Crawler
 
-This project crawls KBO 2026 season game data from the official schedule endpoint, then builds a season workbook and a per-team workbook in `data/output`.
+This project crawls KBO season game data from the official schedule endpoint, then builds a combined schedule workbook and a per-team workbook in `data/output`.
 
 ## Run
 
@@ -8,10 +8,16 @@ This project crawls KBO 2026 season game data from the official schedule endpoin
 python src/main.py --year 2026 --months 1-12
 ```
 
+To crawl multiple seasons into the same output workbooks:
+
+```bash
+python src/main.py --years 2021-2026 --months 1-12
+```
+
 To commit the regenerated data files and push them to GitHub after a successful crawl:
 
 ```bash
-python src/main.py --year 2026 --months 1-12 --push
+python src/main.py --years 2021-2026 --months 1-12 --push
 ```
 
 You can also narrow the crawl to a smaller range while testing:
@@ -35,9 +41,9 @@ After the first Cloud deployment, running the crawler with `--push` updates GitH
 
 ## Output
 
-- `data/output/kbo_schedule_2026.xlsx` for the season-level schedule data
-- `data/output/kbo_team_sheets_2026.xlsx` for one sheet per team
-- `data/raw/2026/schedule_2026_MM.json` for each crawled month
+- `data/output/kbo_schedule.xlsx` for the combined schedule data
+- `data/output/kbo_team_sheets.xlsx` for one sheet per team plus a `Total` sheet
+- `data/raw/YYYY/schedule_YYYY_MM.json` for each crawled month
 
 ## Notes
 

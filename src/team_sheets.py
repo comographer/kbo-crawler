@@ -10,6 +10,7 @@ from excel_output import write_with_permission_fallback
 
 TEAM_COLUMNS = [
 	"game_id",
+	"season_year",
 	"source_month",
 	"game_date",
 	"weekday_ko",
@@ -70,6 +71,7 @@ def build_team_sheet_rows(schedule_frame: pd.DataFrame) -> pd.DataFrame:
 
 	for _, row in schedule_frame.iterrows():
 		game_id = row.get("game_id")
+		season_year = row.get("season_year")
 		source_month = row.get("source_month")
 		game_date = row.get("game_date")
 		weekday_ko = row.get("weekday_ko")
@@ -94,6 +96,7 @@ def build_team_sheet_rows(schedule_frame: pd.DataFrame) -> pd.DataFrame:
 			rows.append(
 				{
 					"game_id": game_id,
+					"season_year": season_year,
 					"source_month": source_month,
 					"game_date": game_date,
 					"weekday_ko": weekday_ko,

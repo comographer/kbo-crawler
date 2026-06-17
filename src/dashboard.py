@@ -11,8 +11,23 @@ import streamlit as st
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SCHEDULE_PATH = ROOT / "data" / "output" / "kbo_schedule_2026.xlsx"
-TEAM_PATH = ROOT / "data" / "output" / "kbo_team_sheets_2026.xlsx"
+
+
+def first_existing_path(*paths: Path) -> Path:
+	for path in paths:
+		if path.exists():
+			return path
+	return paths[0]
+
+
+SCHEDULE_PATH = first_existing_path(
+	ROOT / "data" / "output" / "kbo_schedule.xlsx",
+	ROOT / "data" / "output" / "kbo_schedule_2026.xlsx",
+)
+TEAM_PATH = first_existing_path(
+	ROOT / "data" / "output" / "kbo_team_sheets.xlsx",
+	ROOT / "data" / "output" / "kbo_team_sheets_2026.xlsx",
+)
 FINAL_RESULTS = {"W", "L", "D"}
 RESULT_COLORS = {
 	"W": "#3D7A5F",
@@ -442,6 +457,15 @@ def month_label(value: Any) -> str:
 		return text.zfill(2) if text.isdigit() else text
 
 
+def year_label(value: Any) -> str:
+	if pd.isna(value):
+		return ""
+	try:
+		return str(int(float(value)))
+	except (TypeError, ValueError):
+		return str(value).strip()
+
+
 def ensure_columns(frame: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
 	for column in columns:
 		if column not in frame.columns:
@@ -462,8 +486,10 @@ def prepare_schedule(frame: pd.DataFrame) -> pd.DataFrame:
 		frame,
 		[
 			"game_id",
+			"season_year",
 			"source_month",
 			"game_date",
+			"game_start_time",
 			"weekday_ko",
 			"weekday_en",
 			"game_duration_min",
@@ -478,8 +504,9 @@ def prepare_schedule(frame: pd.DataFrame) -> pd.DataFrame:
 			"note",
 		],
 	)
-	frame = to_numeric(frame, ["game_duration_min", "crowd", "away_score", "home_score"])
+	frame = to_numeric(frame, ["season_year", "game_duration_min", "crowd", "away_score", "home_score"])
 	frame["game_date"] = pd.to_datetime(frame["game_date"], errors="coerce")
+	frame["season_year_label"] = frame["season_year"].map(year_label)
 	frame["source_month_label"] = frame["source_month"].map(month_label)
 	frame["game_status"] = frame["game_status"].fillna("unknown").astype(str)
 	frame["game_status_label"] = frame["game_status"].map(STATUS_LABELS).fillna(frame["game_status"])
@@ -502,6 +529,7 @@ def prepare_team(frame: pd.DataFrame) -> pd.DataFrame:
 		frame,
 		[
 			"game_id",
+			"season_year",
 			"source_month",
 			"game_date",
 			"weekday_ko",
@@ -531,6 +559,7 @@ def prepare_team(frame: pd.DataFrame) -> pd.DataFrame:
 	frame = to_numeric(
 		frame,
 		[
+			"season_year",
 			"game_duration_min",
 			"crowd",
 			"runs_for",
@@ -549,6 +578,7 @@ def prepare_team(frame: pd.DataFrame) -> pd.DataFrame:
 		],
 	)
 	frame["game_date"] = pd.to_datetime(frame["game_date"], errors="coerce")
+	frame["season_year_label"] = frame["season_year"].map(year_label)
 	frame["source_month_label"] = frame["source_month"].map(month_label)
 	frame["result"] = frame["result"].fillna("Cancel").astype(str)
 	frame["is_final"] = frame["result"].isin(FINAL_RESULTS)
@@ -562,8 +592,11 @@ def prepare_team(frame: pd.DataFrame) -> pd.DataFrame:
 def load_data(schedule_path: str, team_path: str) -> tuple[pd.DataFrame, pd.DataFrame]:
 	schedule = prepare_schedule(pd.read_excel(schedule_path))
 	team_source = read_team_workbook(Path(team_path))
-	if "stadium" not in team_source.columns:
-		team_source = team_source.merge(schedule[["game_id", "stadium"]], on="game_id", how="left")
+	lookup_columns = ["game_id"] + [column for column in ("season_year", "stadium") if column in schedule.columns]
+	schedule_lookup = schedule[lookup_columns].drop_duplicates("game_id") if "game_id" in schedule.columns else pd.DataFrame()
+	for column in ("season_year", "stadium"):
+		if column in schedule_lookup.columns and column not in team_source.columns:
+			team_source = team_source.merge(schedule_lookup[["game_id", column]], on="game_id", how="left")
 	team = prepare_team(team_source)
 	return schedule, team
 
@@ -964,24 +997,30 @@ def apply_layout(fig: go.Figure, height: int = 360) -> go.Figure:
 def filter_data(schedule: pd.DataFrame, team: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, list[str]]:
 	schedule = schedule[schedule["game_status"] == "final"].copy()
 	team = team[team["is_final"]].copy()
+	year_options = sorted(schedule["season_year_label"].dropna().unique().tolist())
 	month_options = sorted(schedule["source_month_label"].dropna().unique().tolist())
 	team_options = sorted(team["team"].dropna().astype(str).unique().tolist())
 
 	with st.sidebar:
 		st.header("필터")
+		selected_years = st.multiselect("연도", year_options, default=year_options)
 		selected_months = st.multiselect("월", month_options, default=month_options)
 		selected_teams = st.multiselect("팀", team_options, default=team_options)
 		selected_home_away = st.multiselect("홈/원정", HOME_AWAY_ORDER, default=HOME_AWAY_ORDER)
 
-	schedule_mask = schedule["source_month_label"].isin(selected_months)
+	schedule_mask = schedule["season_year_label"].isin(selected_years) & schedule["source_month_label"].isin(selected_months)
 	if selected_teams:
 		schedule_mask &= schedule["away_team"].isin(selected_teams) | schedule["home_team"].isin(selected_teams)
 
-	attendance_schedule_mask = schedule["source_month_label"].isin(selected_months)
+	attendance_schedule_mask = schedule["season_year_label"].isin(selected_years) & schedule["source_month_label"].isin(selected_months)
 	if selected_teams:
 		attendance_schedule_mask &= schedule["home_team"].isin(selected_teams)
 
-	rank_mask = team["source_month_label"].isin(selected_months) & team["home_away_label"].isin(selected_home_away)
+	rank_mask = (
+		team["season_year_label"].isin(selected_years)
+		& team["source_month_label"].isin(selected_months)
+		& team["home_away_label"].isin(selected_home_away)
+	)
 	rank_standings = build_standings(team[rank_mask].copy())
 	rank_order = rank_standings["team"].astype(str).tolist() if not rank_standings.empty else []
 
@@ -989,7 +1028,11 @@ def filter_data(schedule: pd.DataFrame, team: pd.DataFrame) -> tuple[pd.DataFram
 	if selected_teams:
 		team_mask &= team["team"].isin(selected_teams)
 
-	attendance_team_mask = team["source_month_label"].isin(selected_months) & (team["home_away_label"] == "홈")
+	attendance_team_mask = (
+		team["season_year_label"].isin(selected_years)
+		& team["source_month_label"].isin(selected_months)
+		& (team["home_away_label"] == "홈")
+	)
 	if selected_teams:
 		attendance_team_mask &= team["team"].isin(selected_teams)
 
@@ -1002,22 +1045,19 @@ def filter_data(schedule: pd.DataFrame, team: pd.DataFrame) -> tuple[pd.DataFram
 	)
 
 
-def render_overview(schedule: pd.DataFrame, team: pd.DataFrame, all_team: pd.DataFrame) -> None:
+def render_overview(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 	standings = build_standings(team)
-	overall_standings = build_standings(all_team)
 
-	metric_cols = st.columns(6)
+	metric_cols = st.columns(4)
 	metric_cols[0].metric("경기 수", format_int(len(schedule)))
 	metric_cols[1].metric("총 관중 수", format_int(schedule["crowd"].sum()))
 	metric_cols[2].metric("평균 관중", format_int(schedule["crowd"].mean()))
 	metric_cols[3].metric("평균 경기 시간", f"{format_float(schedule['game_duration_min'].mean(), 0)}분")
-	metric_cols[4].metric("평균 팀 득점", format_float(team["runs_for"].mean()))
-	metric_cols[5].metric("평균 팀 실점", format_float(team["runs_against"].mean()))
 
 	left, right = st.columns([1.25, 1])
 	with left:
 		st.subheader("팀 순위")
-		display_standings_table(overall_standings)
+		display_standings_table(standings)
 	with right:
 		st.subheader("팀별 승률")
 		if standings.empty:
@@ -1325,8 +1365,9 @@ def render_games(schedule: pd.DataFrame) -> None:
 		)
 
 	st.subheader("경기 목록")
-	table = schedule.sort_values(["game_date", "game_start_time", "game_id"])[
+	table = schedule.sort_values(["season_year", "game_date", "game_start_time", "game_id"])[
 		[
+			"season_year_label",
 			"game_id",
 			"source_month_label",
 			"game_date",
@@ -1344,6 +1385,7 @@ def render_games(schedule: pd.DataFrame) -> None:
 		]
 	].rename(
 		columns={
+			"season_year_label": "연도",
 			"game_id": "game_id",
 			"source_month_label": "월",
 			"game_date": "날짜",
@@ -1364,12 +1406,12 @@ def render_games(schedule: pd.DataFrame) -> None:
 
 
 def main() -> None:
-	st.set_page_config(page_title="KBO 2026 Dashboard", layout="wide")
+	st.set_page_config(page_title="KBO Dashboard by Como", layout="wide")
 	with st.sidebar:
 		dark_mode = st.toggle("다크모드", value=False)
 	set_visual_mode(dark_mode)
 	st.markdown(theme_css(dark_mode), unsafe_allow_html=True)
-	st.title("KBO 2026 Dashboard")
+	st.title("KBO Dashboard by Como")
 
 	if not SCHEDULE_PATH.exists() or not TEAM_PATH.exists():
 		st.error("data/output 폴더에 필요한 엑셀 파일이 없습니다.")
@@ -1392,7 +1434,7 @@ def main() -> None:
 	)
 
 	with overview_tab:
-		render_overview(filtered_schedule, filtered_team, team)
+		render_overview(filtered_schedule, filtered_team)
 	with team_tab:
 		render_team_detail(filtered_team)
 	with matchup_tab:

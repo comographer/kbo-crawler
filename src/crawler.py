@@ -361,7 +361,7 @@ def output_paths(year: int) -> OutputPaths:
 	output_dir.mkdir(parents=True, exist_ok=True)
 	raw_dir.mkdir(parents=True, exist_ok=True)
 	return OutputPaths(
-		xlsx_path=output_dir / f"kbo_schedule_{year}.xlsx",
+		xlsx_path=output_dir / "kbo_schedule.xlsx",
 		raw_dir=raw_dir,
 	)
 
