@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import html
 from pathlib import Path
 from typing import Any
@@ -18,6 +19,14 @@ def first_existing_path(*paths: Path) -> Path:
 		if path.exists():
 			return path
 	return paths[0]
+
+
+def file_signature(path: Path) -> tuple[int, str]:
+	digest = hashlib.sha256()
+	with path.open("rb") as file:
+		for chunk in iter(lambda: file.read(1024 * 1024), b""):
+			digest.update(chunk)
+	return path.stat().st_size, digest.hexdigest()
 
 
 SCHEDULE_PATH = first_existing_path(
@@ -589,7 +598,13 @@ def prepare_team(frame: pd.DataFrame) -> pd.DataFrame:
 
 
 @st.cache_data(show_spinner=False)
-def load_data(schedule_path: str, team_path: str) -> tuple[pd.DataFrame, pd.DataFrame]:
+def load_data(
+	schedule_path: str,
+	team_path: str,
+	schedule_signature: tuple[int, str],
+	team_signature: tuple[int, str],
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+	# Signature args are intentionally part of the Streamlit cache key.
 	schedule = prepare_schedule(pd.read_excel(schedule_path))
 	team_source = read_team_workbook(Path(team_path))
 	lookup_columns = ["game_id"] + [column for column in ("season_year", "stadium") if column in schedule.columns]
@@ -1448,7 +1463,9 @@ def main() -> None:
 		st.error("data/output 폴더에 필요한 엑셀 파일이 없습니다.")
 		return
 
-	schedule, team = load_data(str(SCHEDULE_PATH), str(TEAM_PATH))
+	schedule_signature = file_signature(SCHEDULE_PATH)
+	team_signature = file_signature(TEAM_PATH)
+	schedule, team = load_data(str(SCHEDULE_PATH), str(TEAM_PATH), schedule_signature, team_signature)
 	filtered_schedule, filtered_team, attendance_schedule, attendance_team, rank_order = filter_data(schedule, team)
 
 	if filtered_schedule.empty and filtered_team.empty:
