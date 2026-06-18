@@ -8,16 +8,16 @@ This project crawls KBO season game data from the official schedule endpoint, th
 python src/main.py --year 2026 --months 1-12
 ```
 
-To crawl multiple seasons into the same output workbooks:
+To create or refresh the fixed 2015-2025 history snapshot, then build and push the combined output with the live 2026 crawl:
 
 ```bash
-python src/main.py --years 2021-2026 --months 1-12
+python src/main.py --refresh-history --daily --year 2026 --push
 ```
 
-To commit the regenerated data files and push them to GitHub after a successful crawl:
+For the daily update, crawl only 2026 and merge it with the fixed 2015-2025 snapshot:
 
 ```bash
-python src/main.py --years 2021-2026 --months 1-12 --push
+python src/main.py --daily --year 2026 --push
 ```
 
 You can also narrow the crawl to a smaller range while testing:
@@ -43,6 +43,7 @@ After the first Cloud deployment, running the crawler with `--push` updates GitH
 
 - `data/output/kbo_schedule.xlsx` for the combined schedule data
 - `data/output/kbo_team_sheets.xlsx` for one sheet per team plus a `Total` sheet
+- `data/output/kbo_schedule_history_2015_2025.xlsx` for the fixed 2015-2025 history used by `--daily`
 - `data/raw/YYYY/schedule_YYYY_MM.json` for each crawled month
 
 ## Notes
