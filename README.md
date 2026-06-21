@@ -36,6 +36,7 @@ For Streamlit Community Cloud, deploy this repository with:
 
 - Branch: `main`
 - Main file path: `streamlit_app.py`
+- App URL: https://comographer-kbo-crawler-srcdashboard-zm9vgo.streamlit.app/
 
 After the first Cloud deployment, running the crawler with `--push` updates GitHub and triggers Streamlit Cloud to refresh the app from the latest commit.
 

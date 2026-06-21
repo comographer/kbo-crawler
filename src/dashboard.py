@@ -731,7 +731,7 @@ def tone_class(value: Any, threshold: float) -> str:
 
 
 def render_standings_table(standings: pd.DataFrame) -> None:
-	headers = ["팀", "경기", "승", "패", "무", "승률", "득점", "실점", "득실차", "평균 득점", "평균 실점"]
+	headers = ["팀", "경기", "승", "패", "무", "승률", "연속", "득점", "실점", "득실차", "평균 득점", "평균 실점"]
 	rows = []
 	for _, row in standings.iterrows():
 		team = str(row.get("team") or "")
@@ -745,13 +745,14 @@ def render_standings_table(standings: pd.DataFrame) -> None:
 			html.escape(format_int(row.get("losses"))),
 			html.escape(format_int(row.get("draws"))),
 			f'<span>{html.escape(format_pct(win_pct))}</span>',
+			html.escape(str(row.get("streak") or "-")),
 			html.escape(format_int(row.get("runs_for"))),
 			html.escape(format_int(row.get("runs_against"))),
 			f'<span>{html.escape(format_int(run_diff))}</span>',
 			html.escape(format_float(row.get("avg_runs_for"), 2)),
 			html.escape(format_float(row.get("avg_runs_against"), 2)),
 		]
-		cell_classes = ["", "", "", "", "", tone_class(win_pct, 0.5), "", "", tone_class(run_diff, 0), "", ""]
+		cell_classes = ["", "", "", "", "", tone_class(win_pct, 0.5), "", "", "", tone_class(run_diff, 0), "", ""]
 		rows.append(
 			"<tr>"
 			+ "".join(
@@ -971,6 +972,34 @@ def classified_heatmap(value_frame: pd.DataFrame, metric: str, threshold: float,
 	return fig
 
 
+def build_streaks(team_frame: pd.DataFrame) -> pd.DataFrame:
+	decision_frame = team_frame[team_frame["result"].isin({"W", "L"})].copy()
+	if decision_frame.empty:
+		return pd.DataFrame(columns=["team", "streak"])
+
+	latest_year = decision_frame["season_year"].max()
+	latest_year_frame = decision_frame[decision_frame["season_year"] == latest_year]
+	latest_month = latest_year_frame["source_month"].max()
+	latest_frame = latest_year_frame[latest_year_frame["source_month"] == latest_month].copy()
+	sort_columns = [column for column in ["team", "game_date", "game_id"] if column in latest_frame.columns]
+	latest_frame = latest_frame.sort_values(sort_columns, ascending=[True, False, False][: len(sort_columns)])
+
+	streaks = []
+	for team, group in latest_frame.groupby("team", dropna=False):
+		results = group["result"].astype(str).tolist()
+		if not results:
+			continue
+		latest_result = results[0]
+		count = 0
+		for result in results:
+			if result != latest_result:
+				break
+			count += 1
+		label = f"{count}연승" if latest_result == "W" else f"{count}연패"
+		streaks.append({"team": team, "streak": label})
+	return pd.DataFrame(streaks)
+
+
 def build_standings(team_frame: pd.DataFrame) -> pd.DataFrame:
 	final_frame = team_frame[team_frame["is_final"]].copy()
 	if final_frame.empty:
@@ -999,6 +1028,11 @@ def build_standings(team_frame: pd.DataFrame) -> pd.DataFrame:
 	)
 	decision_games = standings["wins"] + standings["losses"]
 	standings["win_pct"] = standings["wins"].div(decision_games.where(decision_games > 0))
+	streaks = build_streaks(final_frame)
+	if not streaks.empty:
+		standings = standings.merge(streaks, on="team", how="left")
+	else:
+		standings["streak"] = pd.NA
 	return standings.sort_values(["win_pct", "wins", "run_diff"], ascending=[False, False, False])
 
 
