@@ -19,6 +19,7 @@ TEAM_COLUMNS = [
 	"crowd",
 	"innings_played",
 	"extra_inning_flag",
+	"walkoff_flag",
 	"team",
 	"opponent",
 	"home_away",
@@ -60,6 +61,8 @@ TEAM_COLUMNS = [
 	"score_after_7_against",
 	"comeback_win",
 	"blown_loss",
+	"walkoff_win",
+	"walkoff_loss",
 ]
 
 
@@ -96,21 +99,25 @@ def _prefixed_int(row: pd.Series, prefix: str, suffix: str) -> int | None:
 	return _to_int(row.get(f"{prefix}_{suffix}"))
 
 
-def _inning_score_states(row: pd.Series, prefix: str, opponent_prefix: str) -> list[tuple[int, int]]:
-	score_for = 0
-	score_against = 0
+def _lead_states(row: pd.Series, prefix: str, opponent_prefix: str) -> list[tuple[int, int]]:
+	away_score = 0
+	home_score = 0
 	states: list[tuple[int, int]] = []
 	innings_played = _to_int(row.get("innings_played")) or 12
 
 	for inning in range(1, min(innings_played, 12) + 1):
-		runs_for = _prefixed_int(row, prefix, f"runs_{inning}")
-		runs_against = _prefixed_int(row, opponent_prefix, f"runs_{inning}")
-		if runs_for is None and runs_against is None:
-			continue
-		score_for += runs_for or 0
-		score_against += runs_against or 0
-		if inning < innings_played:
-			states.append((score_for, score_against))
+		away_runs = _prefixed_int(row, "away", f"runs_{inning}")
+		home_runs = _prefixed_int(row, "home", f"runs_{inning}")
+		if away_runs is not None:
+			away_score += away_runs
+			states.append((away_score, home_score))
+		if home_runs is not None:
+			home_score += home_runs
+			states.append((away_score, home_score))
+
+	if prefix == "away":
+		return states
+	return [(home_score, away_score) for away_score, home_score in states]
 	return states
 
 
@@ -120,10 +127,18 @@ def _comeback_flags(
 	prefix: str,
 	opponent_prefix: str,
 ) -> tuple[int, int]:
-	states = _inning_score_states(row, prefix, opponent_prefix)
+	states = _lead_states(row, prefix, opponent_prefix)
 	comeback_win = 1 if result == "W" and any(score_for < score_against for score_for, score_against in states) else 0
 	blown_loss = 1 if result == "L" and any(score_for > score_against for score_for, score_against in states) else 0
 	return comeback_win, blown_loss
+
+
+def _walkoff_flags(home_away: str, result: str, walkoff: int) -> tuple[int, int]:
+	if home_away == "home" and result == "W" and walkoff == 1:
+		return 1, 0
+	if home_away == "away" and result == "L" and walkoff == 1:
+		return 0, 1
+	return 0, 0
 
 
 def build_team_sheet_rows(schedule_frame: pd.DataFrame) -> pd.DataFrame:
@@ -140,6 +155,7 @@ def build_team_sheet_rows(schedule_frame: pd.DataFrame) -> pd.DataFrame:
 		crowd = _to_int(row.get("crowd"))
 		innings_played = _to_int(row.get("innings_played"))
 		extra_inning_flag = 1 if _to_int(row.get("extra_inning_flag")) == 1 else 0
+		walkoff_flag = 1 if _to_int(row.get("walkoff_flag")) == 1 else 0
 		away_team = row.get("away_team")
 		home_team = row.get("home_team")
 		away_score = _to_int(row.get("away_score"))
@@ -163,6 +179,7 @@ def build_team_sheet_rows(schedule_frame: pd.DataFrame) -> pd.DataFrame:
 				prefix,
 				opponent_prefix,
 			)
+			walkoff_win, walkoff_loss = _walkoff_flags(home_away, result, walkoff_flag)
 			rows.append(
 				{
 					"game_id": game_id,
@@ -175,6 +192,7 @@ def build_team_sheet_rows(schedule_frame: pd.DataFrame) -> pd.DataFrame:
 					"crowd": crowd,
 					"innings_played": innings_played,
 					"extra_inning_flag": extra_inning_flag,
+					"walkoff_flag": walkoff_flag,
 					"team": team,
 					"opponent": opponent,
 					"home_away": home_away,
@@ -216,6 +234,8 @@ def build_team_sheet_rows(schedule_frame: pd.DataFrame) -> pd.DataFrame:
 					"score_after_7_against": _prefixed_int(row, opponent_prefix, "score_after_7"),
 					"comeback_win": comeback_win,
 					"blown_loss": blown_loss,
+					"walkoff_win": walkoff_win,
+					"walkoff_loss": walkoff_loss,
 				}
 			)
 

@@ -429,6 +429,16 @@ def theme_css(dark_mode: bool) -> str:
 		"""
 	return """
 	<style>
+	.stApp {background-color: #FFFFFF; color: #263238;}
+	header[data-testid="stHeader"] {background-color: #FFFFFF;}
+	[data-testid="stToolbar"], [data-testid="stDecoration"], [data-testid="stStatusWidget"] {
+		background-color: #FFFFFF;
+		color: #263238;
+	}
+	h1, h2, h3, h4, h5, h6, p, label, span, div {
+		color: #263238;
+	}
+	section[data-testid="stSidebar"] {background-color: #F5F7F8;}
 	.block-container {padding-top: 1.5rem; padding-bottom: 1.5rem;}
 	[data-testid="stMetricValue"] {font-size: 1.55rem;}
 		.stTabs [data-baseweb="tab-list"] {gap: 0.5rem;}
@@ -598,6 +608,7 @@ def prepare_schedule(frame: pd.DataFrame) -> pd.DataFrame:
 			"crowd",
 			"innings_played",
 			"extra_inning_flag",
+			"walkoff_flag",
 			"away_team",
 			"away_score",
 			"home_score",
@@ -638,6 +649,7 @@ def prepare_schedule(frame: pd.DataFrame) -> pd.DataFrame:
 			"crowd",
 			"innings_played",
 			"extra_inning_flag",
+			"walkoff_flag",
 			"away_score",
 			"home_score",
 			"away_hits",
@@ -697,6 +709,7 @@ def prepare_team(frame: pd.DataFrame) -> pd.DataFrame:
 			"crowd",
 			"innings_played",
 			"extra_inning_flag",
+			"walkoff_flag",
 			"stadium",
 			"team",
 			"opponent",
@@ -739,6 +752,8 @@ def prepare_team(frame: pd.DataFrame) -> pd.DataFrame:
 			"score_after_7_against",
 			"comeback_win",
 			"blown_loss",
+			"walkoff_win",
+			"walkoff_loss",
 		],
 	)
 	frame = to_numeric(
@@ -749,6 +764,7 @@ def prepare_team(frame: pd.DataFrame) -> pd.DataFrame:
 			"crowd",
 			"innings_played",
 			"extra_inning_flag",
+			"walkoff_flag",
 			"runs_for",
 			"runs_against",
 			"run_diff",
@@ -786,6 +802,8 @@ def prepare_team(frame: pd.DataFrame) -> pd.DataFrame:
 			"score_after_7_against",
 			"comeback_win",
 			"blown_loss",
+			"walkoff_win",
+			"walkoff_loss",
 		],
 	)
 	frame["game_date"] = pd.to_datetime(frame["game_date"], errors="coerce")
@@ -1481,15 +1499,14 @@ def render_team_detail(team: pd.DataFrame, rank_order: list[str]) -> None:
 	win_pct = wins / (wins + losses) if wins + losses else pd.NA
 	run_diff = final_frame["run_diff"].sum() if not final_frame.empty else pd.NA
 
-	metric_cols = st.columns(8)
+	metric_cols = st.columns(7)
 	metric_cols[0].metric("전적", f"{wins}-{losses}-{draws}")
 	metric_cols[1].metric("승률", format_pct(win_pct))
 	metric_cols[2].metric("득실차", format_int(run_diff))
 	metric_cols[3].metric("평균 득점", format_float(final_frame["runs_for"].mean()))
 	metric_cols[4].metric("평균 실점", format_float(final_frame["runs_against"].mean()))
-	metric_cols[5].metric("1점차", f"{format_int(final_frame['one_run_game'].sum())}승 / {format_int(final_frame['one_run_loss'].sum())}패")
-	metric_cols[6].metric("평균 안타", format_float(final_frame["hits_for"].mean(), 2))
-	metric_cols[7].metric("평균 실책", format_float(final_frame["errors_for"].mean(), 2))
+	metric_cols[5].metric("평균 안타", format_float(final_frame["hits_for"].mean(), 2))
+	metric_cols[6].metric("평균 실책", format_float(final_frame["errors_for"].mean(), 2))
 
 	left, right = st.columns(2)
 	with left:
@@ -1538,12 +1555,14 @@ def render_team_detail(team: pd.DataFrame, rank_order: list[str]) -> None:
 	recent_wins = int(recent["win_flag"].sum())
 	recent_losses = int(recent["loss_flag"].sum())
 	recent_draws = int(recent["draw_flag"].sum())
-	recent_metric_cols = st.columns(5)
+	recent_metric_cols = st.columns(7)
 	recent_metric_cols[0].metric("최근 전적", f"{recent_wins}-{recent_losses}-{recent_draws}")
 	recent_metric_cols[1].metric("최근 승률", format_pct(recent_wins / (recent_wins + recent_losses) if recent_wins + recent_losses else pd.NA))
 	recent_metric_cols[2].metric("평균 득점", format_float(recent["runs_for"].mean()))
 	recent_metric_cols[3].metric("평균 실점", format_float(recent["runs_against"].mean()))
 	recent_metric_cols[4].metric("득실차", format_int(recent["run_diff"].sum()))
+	recent_metric_cols[5].metric("평균 안타", format_float(recent["hits_for"].mean(), 2))
+	recent_metric_cols[6].metric("평균 실책", format_float(recent["errors_for"].mean(), 2))
 
 	recent = recent.sort_values(["game_date", "game_id"], ascending=[False, False]).reset_index(drop=True)
 	render_recent_games_table(recent)
@@ -1637,6 +1656,8 @@ def render_flow_insights(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 		"after_5_runs_against",
 		"comeback_win",
 		"blown_loss",
+		"walkoff_win",
+		"walkoff_loss",
 	]
 	if final_team.empty or not final_team[flow_columns].notna().any().any():
 		st.info("선택한 조건에 이닝 흐름 데이터가 없습니다. 전체 기간 재크롤링 후 표시됩니다.")
@@ -1655,6 +1676,8 @@ def render_flow_insights(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 			after_5_runs_against=("after_5_runs_against", "sum"),
 			comeback_win=("comeback_win", "sum"),
 			blown_loss=("blown_loss", "sum"),
+			walkoff_win=("walkoff_win", "sum"),
+			walkoff_loss=("walkoff_loss", "sum"),
 		)
 		.reset_index()
 	)
@@ -1663,11 +1686,13 @@ def render_flow_insights(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 
 	final_schedule = schedule[schedule["game_status"] == "final"].copy()
 	extra_games = final_schedule[final_schedule["extra_inning_flag"].fillna(0) == 1].copy()
-	metric_cols = st.columns(4)
+	metric_cols = st.columns(6)
 	metric_cols[0].metric("연장 경기", format_int(len(extra_games)))
 	metric_cols[1].metric("역전승", format_int(summary["comeback_win"].sum()))
 	metric_cols[2].metric("역전패", format_int(summary["blown_loss"].sum()))
-	metric_cols[3].metric("6회 이후 총 득실", format_int(summary["after_5_run_diff"].sum()))
+	metric_cols[3].metric("끝내기승", format_int(summary["walkoff_win"].sum()))
+	metric_cols[4].metric("끝내기패", format_int(summary["walkoff_loss"].sum()))
+	metric_cols[5].metric("6회 이후 총 득실", format_int(summary["after_5_run_diff"].sum()))
 
 	left, right = st.columns(2)
 	with left:
@@ -1686,6 +1711,56 @@ def render_flow_insights(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 		)
 		st.plotly_chart(fig, width="stretch")
 
+	left, right = st.columns([1, 1])
+	with left:
+		st.subheader("끝내기승 / 끝내기패")
+		fig = paired_team_bar(
+			summary,
+			team_column="team",
+			first_column="walkoff_win",
+			second_column="walkoff_loss",
+			first_name="끝내기승",
+			second_name="끝내기패",
+			title_y="경기",
+		)
+		st.plotly_chart(fig, width="stretch")
+	with right:
+		st.subheader("연장 경기 목록")
+		if extra_games.empty:
+			plot_empty("연장 경기 데이터가 없습니다.")
+		else:
+			extra_games["score"] = extra_games.apply(lambda row: f"{format_int(row.get('away_score'))} - {format_int(row.get('home_score'))}", axis=1)
+			extra_table = extra_games.sort_values(["game_date", "game_start_time", "game_id"], ascending=[False, False, False]).head(12)[
+				[
+					"game_date",
+					"matchup",
+					"score",
+					"innings_played",
+					"stadium",
+					"game_duration_min",
+					"crowd",
+				]
+			].rename(
+				columns={
+					"game_date": "날짜",
+					"matchup": "경기",
+					"score": "스코어",
+					"innings_played": "이닝",
+					"stadium": "구장",
+					"game_duration_min": "시간(분)",
+					"crowd": "관중",
+				}
+			)
+			render_table(
+				extra_table,
+				column_config={
+					"날짜": st.column_config.DateColumn("날짜"),
+					"이닝": st.column_config.NumberColumn("이닝", format="%d"),
+					"시간(분)": st.column_config.NumberColumn("시간(분)", format="%.0f"),
+					"관중": st.column_config.NumberColumn("관중", format="%d"),
+				},
+			)
+
 	st.subheader("팀별 흐름 요약")
 	summary_table = summary.sort_values(["after_5_run_diff", "first_5_run_diff"], ascending=[False, False])[
 		[
@@ -1699,6 +1774,8 @@ def render_flow_insights(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 			"after_5_run_diff",
 			"comeback_win",
 			"blown_loss",
+			"walkoff_win",
+			"walkoff_loss",
 		]
 	].rename(
 		columns={
@@ -1712,6 +1789,8 @@ def render_flow_insights(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 			"after_5_run_diff": "6회 이후 득실",
 			"comeback_win": "역전승",
 			"blown_loss": "역전패",
+			"walkoff_win": "끝내기승",
+			"walkoff_loss": "끝내기패",
 		}
 	)
 	render_table(
@@ -1726,44 +1805,10 @@ def render_flow_insights(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 			"6회 이후 득실": st.column_config.NumberColumn("6회 이후 득실", format="%.0f"),
 			"역전승": st.column_config.NumberColumn("역전승", format="%.0f"),
 			"역전패": st.column_config.NumberColumn("역전패", format="%.0f"),
+			"끝내기승": st.column_config.NumberColumn("끝내기승", format="%.0f"),
+			"끝내기패": st.column_config.NumberColumn("끝내기패", format="%.0f"),
 		},
 	)
-
-	st.subheader("연장 경기 목록")
-	if extra_games.empty:
-		plot_empty("연장 경기 데이터가 없습니다.")
-	else:
-		extra_games["score"] = extra_games.apply(lambda row: f"{format_int(row.get('away_score'))} - {format_int(row.get('home_score'))}", axis=1)
-		extra_table = extra_games.sort_values(["game_date", "game_start_time", "game_id"], ascending=[False, False, False]).head(30)[
-			[
-				"game_date",
-				"matchup",
-				"score",
-				"innings_played",
-				"stadium",
-				"game_duration_min",
-				"crowd",
-			]
-		].rename(
-			columns={
-				"game_date": "날짜",
-				"matchup": "경기",
-				"score": "스코어",
-				"innings_played": "이닝",
-				"stadium": "구장",
-				"game_duration_min": "시간(분)",
-				"crowd": "관중",
-			}
-		)
-		render_table(
-			extra_table,
-			column_config={
-				"날짜": st.column_config.DateColumn("날짜"),
-				"이닝": st.column_config.NumberColumn("이닝", format="%d"),
-				"시간(분)": st.column_config.NumberColumn("시간(분)", format="%.0f"),
-				"관중": st.column_config.NumberColumn("관중", format="%d"),
-			},
-		)
 
 
 def render_attendance(schedule: pd.DataFrame, home_team_source: pd.DataFrame, duration_team: pd.DataFrame) -> None:
@@ -1931,11 +1976,12 @@ def main() -> None:
 	st.set_page_config(page_title="KBO Dashboard by Como", layout="wide")
 	restore_dark_mode_from_browser()
 	initialize_dark_mode_state()
+	dark_mode = bool(st.session_state.get("dark_mode"))
+	set_visual_mode(dark_mode)
+	st.markdown(theme_css(dark_mode), unsafe_allow_html=True)
 	with st.sidebar:
 		dark_mode = st.toggle("다크모드", key="dark_mode", on_change=update_dark_mode_query_param)
 	persist_dark_mode_to_browser(dark_mode)
-	set_visual_mode(dark_mode)
-	st.markdown(theme_css(dark_mode), unsafe_allow_html=True)
 	st.title("KBO Dashboard by Como")
 
 	if not SCHEDULE_PATH.exists() or not TEAM_PATH.exists():

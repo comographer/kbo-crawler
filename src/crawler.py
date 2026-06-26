@@ -30,6 +30,7 @@ SCOREBOARD_DETAIL_KEYS = (
 	"stadium",
 	"innings_played",
 	"extra_inning_flag",
+	"walkoff_flag",
 	*(
 		f"{prefix}_{suffix}"
 		for prefix in ("away", "home")
@@ -178,6 +179,21 @@ def innings_played(away_values: list[int | None], home_values: list[int | None])
 	return last_inning or None
 
 
+def walkoff_flag(record: dict[str, Any], home_values: list[int | None]) -> int:
+	innings = record.get("innings_played")
+	away_score = parse_scoreboard_int(record.get("away_score"))
+	home_score = parse_scoreboard_int(record.get("home_score"))
+	if not innings or away_score is None or home_score is None or home_score <= away_score:
+		return 0
+	if innings > len(home_values):
+		return 0
+	home_runs_final = home_values[innings - 1]
+	if home_runs_final is None or home_runs_final <= 0:
+		return 0
+	home_score_before_final = home_score - home_runs_final
+	return 1 if home_score_before_final <= away_score else 0
+
+
 def enrich_record_with_linescore(record: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
 	inning_rows = parse_scoreboard_table(data.get("table2"))
 	if len(inning_rows) >= 2:
@@ -197,6 +213,7 @@ def enrich_record_with_linescore(record: dict[str, Any], data: dict[str, Any]) -
 			record[f"{prefix}_score_after_7"] = score_after(values, 7)
 		record["innings_played"] = innings_played(away_values, home_values)
 		record["extra_inning_flag"] = 1 if (record.get("innings_played") or 0) > 9 else 0
+		record["walkoff_flag"] = walkoff_flag(record, home_values)
 
 	total_rows = parse_scoreboard_table(data.get("table3"))
 	if len(total_rows) >= 2:
@@ -549,6 +566,7 @@ def build_schedule_dataframe(records: list[dict[str, Any]]) -> pd.DataFrame:
 		"crowd",
 		"innings_played",
 		"extra_inning_flag",
+		"walkoff_flag",
 		*(
 			f"{prefix}_{suffix}"
 			for prefix in ("away", "home")
@@ -587,6 +605,7 @@ def build_schedule_dataframe(records: list[dict[str, Any]]) -> pd.DataFrame:
 			"crowd",
 			"innings_played",
 			"extra_inning_flag",
+			"walkoff_flag",
 			"away_team",
 			"away_score",
 			"home_score",
