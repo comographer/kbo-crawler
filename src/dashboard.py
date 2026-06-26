@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import html
-import json
 from pathlib import Path
 from typing import Any
 
@@ -10,7 +9,6 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-import streamlit.components.v1 as components
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -88,102 +86,10 @@ RESULT_BAR_ORDER = ["L", "W", "D"]
 GREEN_SCALE = ["#F3FAF4", "#DCEFE1", "#B9DFC3", "#86C995", "#4CA764", "#1F7A3B"]
 SOFT_GREEN_SCALE = ["#F6FBF7", "#E7F4EA", "#CFE8D5", "#A8D2B5", "#73B584"]
 PLOT_TEMPLATE = "plotly_white"
-ACTIVE_DARK_MODE = False
-ACTIVE_TEAM_COLORS = TEAM_COLORS.copy()
-ACTIVE_GREEN_SCALE = GREEN_SCALE
-ACTIVE_SOFT_GREEN_SCALE = SOFT_GREEN_SCALE
-ACTIVE_PLOT_TEMPLATE = PLOT_TEMPLATE
-DARK_MODE_STORAGE_KEY = "kbo_dashboard_dark_mode"
-DARK_MODE_QUERY_KEY = "dark_mode"
-
-
-def parse_bool(value: Any) -> bool | None:
-	if value is None:
-		return None
-	if isinstance(value, list):
-		value = value[-1] if value else None
-	if isinstance(value, bool):
-		return value
-	text = str(value).strip().lower()
-	if text in {"1", "true", "yes", "y", "on", "dark"}:
-		return True
-	if text in {"0", "false", "no", "n", "off", "light"}:
-		return False
-	return None
-
-
-def query_param_bool(name: str) -> bool | None:
-	try:
-		return parse_bool(st.query_params.get(name))
-	except Exception:
-		return None
-
-
-def restore_dark_mode_from_browser() -> None:
-	components.html(
-		f"""
-		<script>
-		(() => {{
-			const storageKey = {json.dumps(DARK_MODE_STORAGE_KEY)};
-			const queryKey = {json.dumps(DARK_MODE_QUERY_KEY)};
-			const restoreKey = `${{storageKey}}_restore_attempted`;
-			try {{
-				const parentWindow = window.parent;
-				const url = new URL(parentWindow.location.href);
-				if (url.searchParams.has(queryKey)) {{
-					return;
-				}}
-				const storedValue = parentWindow.localStorage.getItem(storageKey);
-				if (storedValue !== "true" && storedValue !== "false") {{
-					return;
-				}}
-				const restoreValue = `${{url.pathname}}:${{storedValue}}`;
-				if (parentWindow.sessionStorage.getItem(restoreKey) === restoreValue) {{
-					return;
-				}}
-				parentWindow.sessionStorage.setItem(restoreKey, restoreValue);
-				url.searchParams.set(queryKey, storedValue);
-				parentWindow.history.replaceState(null, "", url.toString());
-				parentWindow.location.reload();
-			}} catch (error) {{}}
-		}})();
-		</script>
-		""",
-		height=0,
-	)
-
-
-def initialize_dark_mode_state() -> None:
-	query_value = query_param_bool(DARK_MODE_QUERY_KEY)
-	if query_value is not None and st.session_state.get("_dark_mode_query_value") != query_value:
-		st.session_state["dark_mode"] = query_value
-		st.session_state["_dark_mode_query_value"] = query_value
-	if "dark_mode" not in st.session_state:
-		st.session_state["dark_mode"] = False
-
-
-def update_dark_mode_query_param() -> None:
-	value = "true" if st.session_state.get("dark_mode") else "false"
-	if st.query_params.get(DARK_MODE_QUERY_KEY) != value:
-		st.query_params[DARK_MODE_QUERY_KEY] = value
-
-
-def persist_dark_mode_to_browser(dark_mode: bool) -> None:
-	value = "true" if dark_mode else "false"
-	components.html(
-		f"""
-		<script>
-		(() => {{
-			const storageKey = {json.dumps(DARK_MODE_STORAGE_KEY)};
-			const value = {json.dumps(value)};
-			try {{
-				window.parent.localStorage.setItem(storageKey, value);
-			}} catch (error) {{}}
-		}})();
-		</script>
-		""",
-		height=0,
-	)
+DEFAULT_DARK_MODE = True
+DARK_GREEN_SCALE = ["#18261C", "#21402A", "#2D5C38", "#3F7E49", "#63A869", "#A6D7A8"]
+DARK_SOFT_GREEN_SCALE = ["#1B2420", "#25352C", "#35513E", "#4B7258", "#76A684"]
+DARK_PLOT_TEMPLATE = "plotly_dark"
 
 
 def hex_to_rgb(value: str) -> tuple[int, int, int]:
@@ -218,9 +124,12 @@ def set_visual_mode(dark_mode: bool) -> None:
 	global ACTIVE_DARK_MODE, ACTIVE_TEAM_COLORS, ACTIVE_GREEN_SCALE, ACTIVE_SOFT_GREEN_SCALE, ACTIVE_PLOT_TEMPLATE
 	ACTIVE_DARK_MODE = dark_mode
 	ACTIVE_TEAM_COLORS = filtered_team_colors(dark_mode)
-	ACTIVE_GREEN_SCALE = ["#18261C", "#21402A", "#2D5C38", "#3F7E49", "#63A869", "#A6D7A8"] if dark_mode else GREEN_SCALE
-	ACTIVE_SOFT_GREEN_SCALE = ["#1B2420", "#25352C", "#35513E", "#4B7258", "#76A684"] if dark_mode else SOFT_GREEN_SCALE
-	ACTIVE_PLOT_TEMPLATE = "plotly_dark" if dark_mode else PLOT_TEMPLATE
+	ACTIVE_GREEN_SCALE = DARK_GREEN_SCALE if dark_mode else GREEN_SCALE
+	ACTIVE_SOFT_GREEN_SCALE = DARK_SOFT_GREEN_SCALE if dark_mode else SOFT_GREEN_SCALE
+	ACTIVE_PLOT_TEMPLATE = DARK_PLOT_TEMPLATE if dark_mode else PLOT_TEMPLATE
+
+
+set_visual_mode(DEFAULT_DARK_MODE)
 
 
 def active_team_colors() -> dict[str, str]:
@@ -1524,23 +1433,6 @@ def render_team_detail(team: pd.DataFrame, rank_order: list[str]) -> None:
 	metric_cols[5].metric("평균 안타", format_float(final_frame["hits_for"].mean(), 2))
 	metric_cols[6].metric("평균 실책", format_float(final_frame["errors_for"].mean(), 2))
 
-	flow_summary = build_flow_summary(team_frame)
-	if not flow_summary.empty:
-		flow_row = flow_summary.iloc[0]
-		left, right = st.columns(2)
-		with left:
-			st.subheader("역전승 / 역전패")
-			st.plotly_chart(
-				two_value_bar("역전승", flow_row["comeback_win"], "역전패", flow_row["blown_loss"]),
-				width="stretch",
-			)
-		with right:
-			st.subheader("끝내기승 / 끝내기패")
-			st.plotly_chart(
-				two_value_bar("끝내기승", flow_row["walkoff_win"], "끝내기패", flow_row["walkoff_loss"]),
-				width="stretch",
-			)
-
 	left, right = st.columns(2)
 	with left:
 		st.subheader("월별 성적")
@@ -1578,6 +1470,23 @@ def render_team_detail(team: pd.DataFrame, rank_order: list[str]) -> None:
 			plot_empty("요일별 성적 데이터가 없습니다.")
 		else:
 			st.plotly_chart(result_count_bar(weekday, "weekday_label", "요일"), width="stretch")
+
+	flow_summary = build_flow_summary(team_frame)
+	if not flow_summary.empty:
+		flow_row = flow_summary.iloc[0]
+		left, right = st.columns(2)
+		with left:
+			st.subheader("역전승 / 역전패")
+			st.plotly_chart(
+				two_value_bar("역전승", flow_row["comeback_win"], "역전패", flow_row["blown_loss"]),
+				width="stretch",
+			)
+		with right:
+			st.subheader("끝내기승 / 끝내기패")
+			st.plotly_chart(
+				two_value_bar("끝내기승", flow_row["walkoff_win"], "끝내기패", flow_row["walkoff_loss"]),
+				width="stretch",
+			)
 
 	st.subheader("최근 10경기")
 	recent = final_frame.sort_values(["game_date", "game_id"]).tail(10).copy()
@@ -2020,14 +1929,9 @@ def render_games(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 
 def main() -> None:
 	st.set_page_config(page_title="KBO Dashboard by Como", layout="wide")
-	restore_dark_mode_from_browser()
-	initialize_dark_mode_state()
-	dark_mode = bool(st.session_state.get("dark_mode"))
+	dark_mode = DEFAULT_DARK_MODE
 	set_visual_mode(dark_mode)
 	st.markdown(theme_css(dark_mode), unsafe_allow_html=True)
-	with st.sidebar:
-		dark_mode = st.toggle("다크모드", key="dark_mode", on_change=update_dark_mode_query_param)
-	persist_dark_mode_to_browser(dark_mode)
 	st.title("KBO Dashboard by Como")
 
 	if not SCHEDULE_PATH.exists() or not TEAM_PATH.exists():
