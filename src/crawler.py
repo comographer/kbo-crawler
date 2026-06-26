@@ -22,6 +22,33 @@ SCOREBOARD_API_URL = f"{BASE_URL}/ws/Schedule.asmx/GetScoreBoardScroll"
 DEFAULT_SERIES_IDS = "0,9,6"
 DEFAULT_LEAGUE_ID = "1"
 DEFAULT_SCOREBOARD_TYPE = "3"
+SCOREBOARD_DETAIL_KEYS = (
+	"crowd",
+	"game_start_time",
+	"game_finish_time",
+	"game_duration_min",
+	"stadium",
+	"innings_played",
+	"extra_inning_flag",
+	*(
+		f"{prefix}_{suffix}"
+		for prefix in ("away", "home")
+		for suffix in (
+			"hits",
+			"errors",
+			"bases_on_balls",
+			"first_5_runs",
+			"after_5_runs",
+			"first_3_runs",
+			"middle_3_runs",
+			"late_runs",
+			"score_after_5",
+			"score_after_6",
+			"score_after_7",
+		)
+	),
+	*(f"{prefix}_runs_{inning}" for prefix in ("away", "home") for inning in range(1, 13)),
+)
 WEEKDAY_EN = {
 	"월": "Mon",
 	"화": "Tue",
@@ -99,6 +126,86 @@ def parse_duration_to_minutes(value: str | None) -> int | None:
 	hours = int(match.group("hours") or 0)
 	minutes = int(match.group("minutes"))
 	return hours * 60 + minutes
+
+
+def parse_scoreboard_int(value: Any) -> int | None:
+	text = strip_html(str(value)).strip() if value is not None else ""
+	if not text or text == "-":
+		return None
+	try:
+		return int(text.replace(",", ""))
+	except ValueError:
+		return None
+
+
+def parse_scoreboard_table(value: Any) -> list[list[str]]:
+	if not value:
+		return []
+	if isinstance(value, str):
+		try:
+			data = json.loads(value)
+		except json.JSONDecodeError:
+			return []
+	elif isinstance(value, dict):
+		data = value
+	else:
+		return []
+
+	rows: list[list[str]] = []
+	for row in data.get("rows", []):
+		rows.append([strip_html(cell.get("Text")) for cell in row.get("row", [])])
+	return rows
+
+
+def inning_sum(values: list[int | None], start: int, end: int | None = None) -> int | None:
+	selected = [value for value in values[start:end] if value is not None]
+	if not selected:
+		return None
+	return sum(selected)
+
+
+def score_after(values: list[int | None], inning: int) -> int | None:
+	return inning_sum(values, 0, inning)
+
+
+def innings_played(away_values: list[int | None], home_values: list[int | None]) -> int | None:
+	last_inning = 0
+	for index in range(max(len(away_values), len(home_values))):
+		away_value = away_values[index] if index < len(away_values) else None
+		home_value = home_values[index] if index < len(home_values) else None
+		if away_value is not None or home_value is not None:
+			last_inning = index + 1
+	return last_inning or None
+
+
+def enrich_record_with_linescore(record: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
+	inning_rows = parse_scoreboard_table(data.get("table2"))
+	if len(inning_rows) >= 2:
+		away_values = [parse_scoreboard_int(value) for value in inning_rows[0]]
+		home_values = [parse_scoreboard_int(value) for value in inning_rows[1]]
+		for inning in range(1, 13):
+			record[f"away_runs_{inning}"] = away_values[inning - 1] if inning <= len(away_values) else None
+			record[f"home_runs_{inning}"] = home_values[inning - 1] if inning <= len(home_values) else None
+		for prefix, values in (("away", away_values), ("home", home_values)):
+			record[f"{prefix}_first_5_runs"] = inning_sum(values, 0, 5)
+			record[f"{prefix}_after_5_runs"] = inning_sum(values, 5)
+			record[f"{prefix}_first_3_runs"] = inning_sum(values, 0, 3)
+			record[f"{prefix}_middle_3_runs"] = inning_sum(values, 3, 6)
+			record[f"{prefix}_late_runs"] = inning_sum(values, 6)
+			record[f"{prefix}_score_after_5"] = score_after(values, 5)
+			record[f"{prefix}_score_after_6"] = score_after(values, 6)
+			record[f"{prefix}_score_after_7"] = score_after(values, 7)
+		record["innings_played"] = innings_played(away_values, home_values)
+		record["extra_inning_flag"] = 1 if (record.get("innings_played") or 0) > 9 else 0
+
+	total_rows = parse_scoreboard_table(data.get("table3"))
+	if len(total_rows) >= 2:
+		for prefix, values in (("away", total_rows[0]), ("home", total_rows[1])):
+			record[f"{prefix}_hits"] = parse_scoreboard_int(values[1]) if len(values) > 1 else None
+			record[f"{prefix}_errors"] = parse_scoreboard_int(values[2]) if len(values) > 2 else None
+			record[f"{prefix}_bases_on_balls"] = parse_scoreboard_int(values[3]) if len(values) > 3 else None
+
+	return record
 
 
 def has_value(value: Any) -> bool:
@@ -283,6 +390,7 @@ def fetch_scoreboard_scroll(session: requests.Session, record: dict[str, Any]) -
 	record["game_duration_min"] = parse_duration_to_minutes(duration_value)
 	if data.get("S_NM"):
 		record["stadium"] = data.get("S_NM")
+	record = enrich_record_with_linescore(record, data)
 	return record
 
 
@@ -417,7 +525,7 @@ def crawl_season(
 				game_details_cache[record["game_id"]] = fetch_scoreboard_scroll(session, record)
 			if record.get("game_id") and record["game_id"] in game_details_cache:
 				details = game_details_cache[record["game_id"]]
-				for key in ("crowd", "game_start_time", "game_finish_time", "game_duration_min", "stadium"):
+				for key in SCOREBOARD_DETAIL_KEYS:
 					if has_value(details.get(key)):
 						record[key] = details[key]
 
@@ -434,7 +542,33 @@ def build_schedule_dataframe(records: list[dict[str, Any]]) -> pd.DataFrame:
 	frame = pd.DataFrame(records)
 	frame = frame.drop(columns=["raw_row_json", "sr_id"], errors="ignore")
 
-	for column in ("away_score", "home_score", "game_duration_min", "crowd"):
+	numeric_columns = (
+		"away_score",
+		"home_score",
+		"game_duration_min",
+		"crowd",
+		"innings_played",
+		"extra_inning_flag",
+		*(
+			f"{prefix}_{suffix}"
+			for prefix in ("away", "home")
+			for suffix in (
+				"hits",
+				"errors",
+				"bases_on_balls",
+				"first_5_runs",
+				"after_5_runs",
+				"first_3_runs",
+				"middle_3_runs",
+				"late_runs",
+				"score_after_5",
+				"score_after_6",
+				"score_after_7",
+			)
+		),
+		*(f"{prefix}_runs_{inning}" for prefix in ("away", "home") for inning in range(1, 13)),
+	)
+	for column in numeric_columns:
 		if column in frame.columns:
 			frame[column] = frame[column].astype("Int64")
 
@@ -451,10 +585,36 @@ def build_schedule_dataframe(records: list[dict[str, Any]]) -> pd.DataFrame:
 			"game_finish_time",
 			"game_duration_min",
 			"crowd",
+			"innings_played",
+			"extra_inning_flag",
 			"away_team",
 			"away_score",
 			"home_score",
 			"home_team",
+			"away_hits",
+			"home_hits",
+			"away_errors",
+			"home_errors",
+			"away_bases_on_balls",
+			"home_bases_on_balls",
+			"away_first_5_runs",
+			"home_first_5_runs",
+			"away_after_5_runs",
+			"home_after_5_runs",
+			"away_first_3_runs",
+			"home_first_3_runs",
+			"away_middle_3_runs",
+			"home_middle_3_runs",
+			"away_late_runs",
+			"home_late_runs",
+			"away_score_after_5",
+			"home_score_after_5",
+			"away_score_after_6",
+			"home_score_after_6",
+			"away_score_after_7",
+			"home_score_after_7",
+			*(f"away_runs_{inning}" for inning in range(1, 13)),
+			*(f"home_runs_{inning}" for inning in range(1, 13)),
 			"game_status",
 			"status_reason",
 			"stadium",

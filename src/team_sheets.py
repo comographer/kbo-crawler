@@ -17,6 +17,8 @@ TEAM_COLUMNS = [
 	"weekday_en",
 	"game_duration_min",
 	"crowd",
+	"innings_played",
+	"extra_inning_flag",
 	"team",
 	"opponent",
 	"home_away",
@@ -34,6 +36,30 @@ TEAM_COLUMNS = [
 	"one_run_game",
 	"shutout_win",
 	"shutout_loss",
+	"hits_for",
+	"hits_against",
+	"errors_for",
+	"errors_against",
+	"bases_on_balls_for",
+	"bases_on_balls_against",
+	"first_5_runs_for",
+	"first_5_runs_against",
+	"after_5_runs_for",
+	"after_5_runs_against",
+	"first_3_runs_for",
+	"first_3_runs_against",
+	"middle_3_runs_for",
+	"middle_3_runs_against",
+	"late_runs_for",
+	"late_runs_against",
+	"score_after_5_for",
+	"score_after_5_against",
+	"score_after_6_for",
+	"score_after_6_against",
+	"score_after_7_for",
+	"score_after_7_against",
+	"comeback_win",
+	"blown_loss",
 ]
 
 
@@ -66,6 +92,40 @@ def _result_flags(game_status: str, runs_for: int | None, runs_against: int | No
 	return "D", 0, 0, 1, 0, 0, 0, 0, 0
 
 
+def _prefixed_int(row: pd.Series, prefix: str, suffix: str) -> int | None:
+	return _to_int(row.get(f"{prefix}_{suffix}"))
+
+
+def _inning_score_states(row: pd.Series, prefix: str, opponent_prefix: str) -> list[tuple[int, int]]:
+	score_for = 0
+	score_against = 0
+	states: list[tuple[int, int]] = []
+	innings_played = _to_int(row.get("innings_played")) or 12
+
+	for inning in range(1, min(innings_played, 12) + 1):
+		runs_for = _prefixed_int(row, prefix, f"runs_{inning}")
+		runs_against = _prefixed_int(row, opponent_prefix, f"runs_{inning}")
+		if runs_for is None and runs_against is None:
+			continue
+		score_for += runs_for or 0
+		score_against += runs_against or 0
+		if inning < innings_played:
+			states.append((score_for, score_against))
+	return states
+
+
+def _comeback_flags(
+	row: pd.Series,
+	result: str,
+	prefix: str,
+	opponent_prefix: str,
+) -> tuple[int, int]:
+	states = _inning_score_states(row, prefix, opponent_prefix)
+	comeback_win = 1 if result == "W" and any(score_for < score_against for score_for, score_against in states) else 0
+	blown_loss = 1 if result == "L" and any(score_for > score_against for score_for, score_against in states) else 0
+	return comeback_win, blown_loss
+
+
 def build_team_sheet_rows(schedule_frame: pd.DataFrame) -> pd.DataFrame:
 	rows: list[dict[str, Any]] = []
 
@@ -78,20 +138,30 @@ def build_team_sheet_rows(schedule_frame: pd.DataFrame) -> pd.DataFrame:
 		weekday_en = row.get("weekday_en")
 		game_duration_min = _to_int(row.get("game_duration_min"))
 		crowd = _to_int(row.get("crowd"))
+		innings_played = _to_int(row.get("innings_played"))
+		extra_inning_flag = 1 if _to_int(row.get("extra_inning_flag")) == 1 else 0
 		away_team = row.get("away_team")
 		home_team = row.get("home_team")
 		away_score = _to_int(row.get("away_score"))
 		home_score = _to_int(row.get("home_score"))
 		game_status = str(row.get("game_status") or "")
 
-		for team, opponent, home_away, runs_for, runs_against in (
-			(away_team, home_team, "away", away_score, home_score),
-			(home_team, away_team, "home", home_score, away_score),
+		for team, opponent, home_away, runs_for, runs_against, prefix, opponent_prefix in (
+			(away_team, home_team, "away", away_score, home_score, "away", "home"),
+			(home_team, away_team, "home", home_score, away_score, "home", "away"),
 		):
 			result, win_flag, loss_flag, draw_flag, cancellation_flag, one_run_game, shutout_win, _, shutout_loss = _result_flags(
 				game_status,
 				runs_for,
 				runs_against,
+			)
+			score_after_6_for = _prefixed_int(row, prefix, "score_after_6")
+			score_after_6_against = _prefixed_int(row, opponent_prefix, "score_after_6")
+			comeback_win, blown_loss = _comeback_flags(
+				row,
+				result,
+				prefix,
+				opponent_prefix,
 			)
 			rows.append(
 				{
@@ -103,6 +173,8 @@ def build_team_sheet_rows(schedule_frame: pd.DataFrame) -> pd.DataFrame:
 					"weekday_en": weekday_en,
 					"game_duration_min": game_duration_min,
 					"crowd": crowd,
+					"innings_played": innings_played,
+					"extra_inning_flag": extra_inning_flag,
 					"team": team,
 					"opponent": opponent,
 					"home_away": home_away,
@@ -120,6 +192,30 @@ def build_team_sheet_rows(schedule_frame: pd.DataFrame) -> pd.DataFrame:
 					"one_run_game": one_run_game,
 					"shutout_win": shutout_win,
 					"shutout_loss": shutout_loss,
+					"hits_for": _prefixed_int(row, prefix, "hits"),
+					"hits_against": _prefixed_int(row, opponent_prefix, "hits"),
+					"errors_for": _prefixed_int(row, prefix, "errors"),
+					"errors_against": _prefixed_int(row, opponent_prefix, "errors"),
+					"bases_on_balls_for": _prefixed_int(row, prefix, "bases_on_balls"),
+					"bases_on_balls_against": _prefixed_int(row, opponent_prefix, "bases_on_balls"),
+					"first_5_runs_for": _prefixed_int(row, prefix, "first_5_runs"),
+					"first_5_runs_against": _prefixed_int(row, opponent_prefix, "first_5_runs"),
+					"after_5_runs_for": _prefixed_int(row, prefix, "after_5_runs"),
+					"after_5_runs_against": _prefixed_int(row, opponent_prefix, "after_5_runs"),
+					"first_3_runs_for": _prefixed_int(row, prefix, "first_3_runs"),
+					"first_3_runs_against": _prefixed_int(row, opponent_prefix, "first_3_runs"),
+					"middle_3_runs_for": _prefixed_int(row, prefix, "middle_3_runs"),
+					"middle_3_runs_against": _prefixed_int(row, opponent_prefix, "middle_3_runs"),
+					"late_runs_for": _prefixed_int(row, prefix, "late_runs"),
+					"late_runs_against": _prefixed_int(row, opponent_prefix, "late_runs"),
+					"score_after_5_for": _prefixed_int(row, prefix, "score_after_5"),
+					"score_after_5_against": _prefixed_int(row, opponent_prefix, "score_after_5"),
+					"score_after_6_for": score_after_6_for,
+					"score_after_6_against": score_after_6_against,
+					"score_after_7_for": _prefixed_int(row, prefix, "score_after_7"),
+					"score_after_7_against": _prefixed_int(row, opponent_prefix, "score_after_7"),
+					"comeback_win": comeback_win,
+					"blown_loss": blown_loss,
 				}
 			)
 

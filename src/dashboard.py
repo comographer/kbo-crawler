@@ -126,16 +126,22 @@ def restore_dark_mode_from_browser() -> None:
 		(() => {{
 			const storageKey = {json.dumps(DARK_MODE_STORAGE_KEY)};
 			const queryKey = {json.dumps(DARK_MODE_QUERY_KEY)};
+			const restoreKey = `${{storageKey}}_restore_attempted`;
 			try {{
 				const parentWindow = window.parent;
+				const url = new URL(parentWindow.location.href);
+				if (url.searchParams.has(queryKey)) {{
+					return;
+				}}
 				const storedValue = parentWindow.localStorage.getItem(storageKey);
 				if (storedValue !== "true" && storedValue !== "false") {{
 					return;
 				}}
-				const url = new URL(parentWindow.location.href);
-				if (url.searchParams.get(queryKey) === storedValue) {{
+				const restoreValue = `${{url.pathname}}:${{storedValue}}`;
+				if (parentWindow.sessionStorage.getItem(restoreKey) === restoreValue) {{
 					return;
 				}}
+				parentWindow.sessionStorage.setItem(restoreKey, restoreValue);
 				url.searchParams.set(queryKey, storedValue);
 				parentWindow.history.replaceState(null, "", url.toString());
 				parentWindow.location.reload();
@@ -156,6 +162,12 @@ def initialize_dark_mode_state() -> None:
 		st.session_state["dark_mode"] = False
 
 
+def update_dark_mode_query_param() -> None:
+	value = "true" if st.session_state.get("dark_mode") else "false"
+	if st.query_params.get(DARK_MODE_QUERY_KEY) != value:
+		st.query_params[DARK_MODE_QUERY_KEY] = value
+
+
 def persist_dark_mode_to_browser(dark_mode: bool) -> None:
 	value = "true" if dark_mode else "false"
 	components.html(
@@ -163,16 +175,9 @@ def persist_dark_mode_to_browser(dark_mode: bool) -> None:
 		<script>
 		(() => {{
 			const storageKey = {json.dumps(DARK_MODE_STORAGE_KEY)};
-			const queryKey = {json.dumps(DARK_MODE_QUERY_KEY)};
 			const value = {json.dumps(value)};
 			try {{
-				const parentWindow = window.parent;
-				parentWindow.localStorage.setItem(storageKey, value);
-				const url = new URL(parentWindow.location.href);
-				if (url.searchParams.get(queryKey) !== value) {{
-					url.searchParams.set(queryKey, value);
-					parentWindow.history.replaceState(null, "", url.toString());
-				}}
+				window.parent.localStorage.setItem(storageKey, value);
 			}} catch (error) {{}}
 		}})();
 		</script>
@@ -591,17 +596,74 @@ def prepare_schedule(frame: pd.DataFrame) -> pd.DataFrame:
 			"weekday_en",
 			"game_duration_min",
 			"crowd",
+			"innings_played",
+			"extra_inning_flag",
 			"away_team",
 			"away_score",
 			"home_score",
 			"home_team",
+			"away_hits",
+			"home_hits",
+			"away_errors",
+			"home_errors",
+			"away_bases_on_balls",
+			"home_bases_on_balls",
+			"away_first_5_runs",
+			"home_first_5_runs",
+			"away_after_5_runs",
+			"home_after_5_runs",
+			"away_first_3_runs",
+			"home_first_3_runs",
+			"away_middle_3_runs",
+			"home_middle_3_runs",
+			"away_late_runs",
+			"home_late_runs",
+			"away_score_after_5",
+			"home_score_after_5",
+			"away_score_after_6",
+			"home_score_after_6",
+			"away_score_after_7",
+			"home_score_after_7",
 			"game_status",
 			"stadium",
 			"broadcast",
 			"note",
 		],
 	)
-	frame = to_numeric(frame, ["season_year", "game_duration_min", "crowd", "away_score", "home_score"])
+	frame = to_numeric(
+		frame,
+		[
+			"season_year",
+			"game_duration_min",
+			"crowd",
+			"innings_played",
+			"extra_inning_flag",
+			"away_score",
+			"home_score",
+			"away_hits",
+			"home_hits",
+			"away_errors",
+			"home_errors",
+			"away_bases_on_balls",
+			"home_bases_on_balls",
+			"away_first_5_runs",
+			"home_first_5_runs",
+			"away_after_5_runs",
+			"home_after_5_runs",
+			"away_first_3_runs",
+			"home_first_3_runs",
+			"away_middle_3_runs",
+			"home_middle_3_runs",
+			"away_late_runs",
+			"home_late_runs",
+			"away_score_after_5",
+			"home_score_after_5",
+			"away_score_after_6",
+			"home_score_after_6",
+			"away_score_after_7",
+			"home_score_after_7",
+		],
+	)
 	frame["game_date"] = pd.to_datetime(frame["game_date"], errors="coerce")
 	frame["season_year_label"] = frame["season_year"].map(year_label)
 	frame["source_month_label"] = frame["source_month"].map(month_label)
@@ -633,6 +695,8 @@ def prepare_team(frame: pd.DataFrame) -> pd.DataFrame:
 			"weekday_en",
 			"game_duration_min",
 			"crowd",
+			"innings_played",
+			"extra_inning_flag",
 			"stadium",
 			"team",
 			"opponent",
@@ -651,6 +715,30 @@ def prepare_team(frame: pd.DataFrame) -> pd.DataFrame:
 			"one_run_game",
 			"shutout_win",
 			"shutout_loss",
+			"hits_for",
+			"hits_against",
+			"errors_for",
+			"errors_against",
+			"bases_on_balls_for",
+			"bases_on_balls_against",
+			"first_5_runs_for",
+			"first_5_runs_against",
+			"after_5_runs_for",
+			"after_5_runs_against",
+			"first_3_runs_for",
+			"first_3_runs_against",
+			"middle_3_runs_for",
+			"middle_3_runs_against",
+			"late_runs_for",
+			"late_runs_against",
+			"score_after_5_for",
+			"score_after_5_against",
+			"score_after_6_for",
+			"score_after_6_against",
+			"score_after_7_for",
+			"score_after_7_against",
+			"comeback_win",
+			"blown_loss",
 		],
 	)
 	frame = to_numeric(
@@ -659,6 +747,8 @@ def prepare_team(frame: pd.DataFrame) -> pd.DataFrame:
 			"season_year",
 			"game_duration_min",
 			"crowd",
+			"innings_played",
+			"extra_inning_flag",
 			"runs_for",
 			"runs_against",
 			"run_diff",
@@ -672,6 +762,30 @@ def prepare_team(frame: pd.DataFrame) -> pd.DataFrame:
 			"one_run_game",
 			"shutout_win",
 			"shutout_loss",
+			"hits_for",
+			"hits_against",
+			"errors_for",
+			"errors_against",
+			"bases_on_balls_for",
+			"bases_on_balls_against",
+			"first_5_runs_for",
+			"first_5_runs_against",
+			"after_5_runs_for",
+			"after_5_runs_against",
+			"first_3_runs_for",
+			"first_3_runs_against",
+			"middle_3_runs_for",
+			"middle_3_runs_against",
+			"late_runs_for",
+			"late_runs_against",
+			"score_after_5_for",
+			"score_after_5_against",
+			"score_after_6_for",
+			"score_after_6_against",
+			"score_after_7_for",
+			"score_after_7_against",
+			"comeback_win",
+			"blown_loss",
 		],
 	)
 	frame["game_date"] = pd.to_datetime(frame["game_date"], errors="coerce")
@@ -1367,13 +1481,15 @@ def render_team_detail(team: pd.DataFrame, rank_order: list[str]) -> None:
 	win_pct = wins / (wins + losses) if wins + losses else pd.NA
 	run_diff = final_frame["run_diff"].sum() if not final_frame.empty else pd.NA
 
-	metric_cols = st.columns(6)
+	metric_cols = st.columns(8)
 	metric_cols[0].metric("전적", f"{wins}-{losses}-{draws}")
 	metric_cols[1].metric("승률", format_pct(win_pct))
 	metric_cols[2].metric("득실차", format_int(run_diff))
 	metric_cols[3].metric("평균 득점", format_float(final_frame["runs_for"].mean()))
 	metric_cols[4].metric("평균 실점", format_float(final_frame["runs_against"].mean()))
 	metric_cols[5].metric("1점차", f"{format_int(final_frame['one_run_game'].sum())}승 / {format_int(final_frame['one_run_loss'].sum())}패")
+	metric_cols[6].metric("평균 안타", format_float(final_frame["hits_for"].mean(), 2))
+	metric_cols[7].metric("평균 실책", format_float(final_frame["errors_for"].mean(), 2))
 
 	left, right = st.columns(2)
 	with left:
@@ -1480,6 +1596,174 @@ def render_matchups(team: pd.DataFrame, rank_order: list[str]) -> None:
 		fig.update_xaxes(title_text="")
 		fig.update_yaxes(title_text="", autorange="reversed")
 	st.plotly_chart(fig, width="stretch")
+
+
+def phase_run_diff_bar(summary: pd.DataFrame) -> go.Figure:
+	plot_frame = summary.sort_values(["after_5_run_diff", "first_5_run_diff"], ascending=[False, False]).copy()
+	teams = plot_frame["team"].astype(str).tolist()
+	colors = [team_color(team) for team in teams]
+	fig = go.Figure()
+	fig.add_bar(
+		x=teams,
+		y=plot_frame["first_5_run_diff"],
+		name="5회까지",
+		marker_color=colors,
+		text=plot_frame["first_5_run_diff"],
+		textposition="outside",
+		cliponaxis=False,
+	)
+	fig.add_bar(
+		x=teams,
+		y=plot_frame["after_5_run_diff"],
+		name="6회 이후",
+		marker_color=colors,
+		marker_pattern_shape="/",
+		marker_pattern_solidity=0.25,
+		text=plot_frame["after_5_run_diff"],
+		textposition="outside",
+		cliponaxis=False,
+	)
+	fig.update_traces(texttemplate="%{text:,.0f}")
+	fig.update_layout(barmode="group", yaxis_title="득실", xaxis_title="팀")
+	return apply_layout(fig)
+
+
+def render_flow_insights(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
+	final_team = team[team["is_final"]].copy()
+	flow_columns = [
+		"first_5_runs_for",
+		"first_5_runs_against",
+		"after_5_runs_for",
+		"after_5_runs_against",
+		"comeback_win",
+		"blown_loss",
+	]
+	if final_team.empty or not final_team[flow_columns].notna().any().any():
+		st.info("선택한 조건에 이닝 흐름 데이터가 없습니다. 전체 기간 재크롤링 후 표시됩니다.")
+		return
+
+	for column in flow_columns:
+		final_team[column] = final_team[column].fillna(0)
+
+	summary = (
+		final_team.groupby("team", dropna=False)
+		.agg(
+			games=("game_id", "count"),
+			first_5_runs_for=("first_5_runs_for", "sum"),
+			first_5_runs_against=("first_5_runs_against", "sum"),
+			after_5_runs_for=("after_5_runs_for", "sum"),
+			after_5_runs_against=("after_5_runs_against", "sum"),
+			comeback_win=("comeback_win", "sum"),
+			blown_loss=("blown_loss", "sum"),
+		)
+		.reset_index()
+	)
+	summary["first_5_run_diff"] = summary["first_5_runs_for"] - summary["first_5_runs_against"]
+	summary["after_5_run_diff"] = summary["after_5_runs_for"] - summary["after_5_runs_against"]
+
+	final_schedule = schedule[schedule["game_status"] == "final"].copy()
+	extra_games = final_schedule[final_schedule["extra_inning_flag"].fillna(0) == 1].copy()
+	metric_cols = st.columns(4)
+	metric_cols[0].metric("연장 경기", format_int(len(extra_games)))
+	metric_cols[1].metric("역전승", format_int(summary["comeback_win"].sum()))
+	metric_cols[2].metric("역전패", format_int(summary["blown_loss"].sum()))
+	metric_cols[3].metric("6회 이후 총 득실", format_int(summary["after_5_run_diff"].sum()))
+
+	left, right = st.columns(2)
+	with left:
+		st.subheader("팀별 전반 / 후반 득실")
+		st.plotly_chart(phase_run_diff_bar(summary), width="stretch")
+	with right:
+		st.subheader("역전승 / 역전패")
+		fig = paired_team_bar(
+			summary,
+			team_column="team",
+			first_column="comeback_win",
+			second_column="blown_loss",
+			first_name="역전승",
+			second_name="역전패",
+			title_y="경기",
+		)
+		st.plotly_chart(fig, width="stretch")
+
+	st.subheader("팀별 흐름 요약")
+	summary_table = summary.sort_values(["after_5_run_diff", "first_5_run_diff"], ascending=[False, False])[
+		[
+			"team",
+			"games",
+			"first_5_runs_for",
+			"first_5_runs_against",
+			"first_5_run_diff",
+			"after_5_runs_for",
+			"after_5_runs_against",
+			"after_5_run_diff",
+			"comeback_win",
+			"blown_loss",
+		]
+	].rename(
+		columns={
+			"team": "팀",
+			"games": "경기",
+			"first_5_runs_for": "5회까지 득점",
+			"first_5_runs_against": "5회까지 실점",
+			"first_5_run_diff": "5회까지 득실",
+			"after_5_runs_for": "6회 이후 득점",
+			"after_5_runs_against": "6회 이후 실점",
+			"after_5_run_diff": "6회 이후 득실",
+			"comeback_win": "역전승",
+			"blown_loss": "역전패",
+		}
+	)
+	render_table(
+		summary_table,
+		column_config={
+			"경기": st.column_config.NumberColumn("경기", format="%d"),
+			"5회까지 득점": st.column_config.NumberColumn("5회까지 득점", format="%.0f"),
+			"5회까지 실점": st.column_config.NumberColumn("5회까지 실점", format="%.0f"),
+			"5회까지 득실": st.column_config.NumberColumn("5회까지 득실", format="%.0f"),
+			"6회 이후 득점": st.column_config.NumberColumn("6회 이후 득점", format="%.0f"),
+			"6회 이후 실점": st.column_config.NumberColumn("6회 이후 실점", format="%.0f"),
+			"6회 이후 득실": st.column_config.NumberColumn("6회 이후 득실", format="%.0f"),
+			"역전승": st.column_config.NumberColumn("역전승", format="%.0f"),
+			"역전패": st.column_config.NumberColumn("역전패", format="%.0f"),
+		},
+	)
+
+	st.subheader("연장 경기 목록")
+	if extra_games.empty:
+		plot_empty("연장 경기 데이터가 없습니다.")
+	else:
+		extra_games["score"] = extra_games.apply(lambda row: f"{format_int(row.get('away_score'))} - {format_int(row.get('home_score'))}", axis=1)
+		extra_table = extra_games.sort_values(["game_date", "game_start_time", "game_id"], ascending=[False, False, False]).head(30)[
+			[
+				"game_date",
+				"matchup",
+				"score",
+				"innings_played",
+				"stadium",
+				"game_duration_min",
+				"crowd",
+			]
+		].rename(
+			columns={
+				"game_date": "날짜",
+				"matchup": "경기",
+				"score": "스코어",
+				"innings_played": "이닝",
+				"stadium": "구장",
+				"game_duration_min": "시간(분)",
+				"crowd": "관중",
+			}
+		)
+		render_table(
+			extra_table,
+			column_config={
+				"날짜": st.column_config.DateColumn("날짜"),
+				"이닝": st.column_config.NumberColumn("이닝", format="%d"),
+				"시간(분)": st.column_config.NumberColumn("시간(분)", format="%.0f"),
+				"관중": st.column_config.NumberColumn("관중", format="%d"),
+			},
+		)
 
 
 def render_attendance(schedule: pd.DataFrame, home_team_source: pd.DataFrame, duration_team: pd.DataFrame) -> None:
@@ -1648,7 +1932,7 @@ def main() -> None:
 	restore_dark_mode_from_browser()
 	initialize_dark_mode_state()
 	with st.sidebar:
-		dark_mode = st.toggle("다크모드", key="dark_mode")
+		dark_mode = st.toggle("다크모드", key="dark_mode", on_change=update_dark_mode_query_param)
 	persist_dark_mode_to_browser(dark_mode)
 	set_visual_mode(dark_mode)
 	st.markdown(theme_css(dark_mode), unsafe_allow_html=True)
@@ -1672,8 +1956,8 @@ def main() -> None:
 		f"{SCHEDULE_PATH.name} / {TEAM_PATH.name}"
 	)
 
-	overview_tab, team_tab, matchup_tab, attendance_tab, games_tab = st.tabs(
-		["요약", "팀", "상대전적", "관중/구장", "경기"]
+	overview_tab, team_tab, matchup_tab, flow_tab, attendance_tab, games_tab = st.tabs(
+		["요약", "팀", "상대전적", "흐름", "관중/구장", "경기"]
 	)
 
 	with overview_tab:
@@ -1682,6 +1966,8 @@ def main() -> None:
 		render_team_detail(filtered_team, rank_order)
 	with matchup_tab:
 		render_matchups(filtered_team, rank_order)
+	with flow_tab:
+		render_flow_insights(filtered_schedule, filtered_team)
 	with attendance_tab:
 		render_attendance(attendance_schedule, attendance_team, filtered_team)
 	with games_tab:
