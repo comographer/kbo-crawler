@@ -61,7 +61,9 @@ TEAM_COLORS = {
 	"KT": "#000000",
 	"LG": "#C30452",
 	"NC": "#315288",
+	"SK": "#CE0E2D",
 	"SSG": "#CE0E2D",
+	"넥센": "#570514",
 	"두산": "#1A1748",
 	"롯데": "#041E42",
 	"삼성": "#074CA1",
@@ -109,6 +111,11 @@ def mix_hex(color: str, target: str, amount: float) -> str:
 		round(green + (target_green - green) * amount),
 		round(blue + (target_blue - blue) * amount),
 	)
+
+
+def hex_to_rgba(color: str, alpha: float) -> str:
+	red, green, blue = hex_to_rgb(color)
+	return f"rgba({red}, {green}, {blue}, {alpha})"
 
 
 def filtered_team_colors(dark_mode: bool) -> dict[str, str]:
@@ -162,7 +169,7 @@ def theme_css(dark_mode: bool) -> str:
 			color: #C6D2D8;
 		}
 		[data-testid="stMetricValue"] {font-size: 1.55rem; color: #F4F7F8;}
-		[data-testid="stMetricLabel"] {color: #B6C4CB;}
+		[data-testid="stMetricLabel"] {color: #B6C4CB; font-size: 0.875rem;}
 		.stTabs [data-baseweb="tab-list"] {gap: 0.5rem;}
 		.stTabs [data-baseweb="tab"] p {color: #D6E0E5; font-size: 1.06rem; font-weight: 650;}
 		.stTabs [aria-selected="true"] p {color: #F4F7F8;}
@@ -236,19 +243,21 @@ def theme_css(dark_mode: bool) -> str:
 		.standings-table-wrap {
 			border: 1px solid #2B3A42;
 			border-radius: 8px;
-			overflow: hidden;
+			overflow-x: auto;
 			background-color: #111A1F;
 		}
 		.standings-table {
 			width: 100%;
+			min-width: 980px;
 			border-collapse: collapse;
-			font-size: 0.9rem;
+			font-size: 0.84rem;
+			table-layout: fixed;
 		}
 		.standings-table th {
 			background-color: #1A252B;
 			color: #EAF0F3;
 			border-bottom: 1px solid #344650;
-			padding: 0.55rem 0.6rem;
+			padding: 0.48rem 0.42rem;
 			text-align: left;
 			white-space: nowrap;
 		}
@@ -256,12 +265,23 @@ def theme_css(dark_mode: bool) -> str:
 			background-color: #111A1F;
 			color: #DCE5E9;
 			border-bottom: 1px solid #24333B;
-			padding: 0.48rem 0.6rem;
+			padding: 0.42rem 0.42rem;
 			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
 		}
 		.standings-table tr:nth-child(even) td {
 			background-color: #152027;
 		}
+		.standings-table .col-team {width: 8.2rem;}
+		.standings-table .col-compact {width: 3rem; text-align: right;}
+		.standings-table .col-win-pct {width: 4rem; text-align: right;}
+		.standings-table .col-games-behind {width: 4rem; text-align: right;}
+		.standings-table .col-streak {width: 4rem;}
+		.standings-table .col-score {width: 3.7rem; text-align: right;}
+		.standings-table .col-run-diff {width: 4.1rem; text-align: right;}
+		.standings-table .col-average {width: 4.7rem; text-align: right;}
+		.standings-table .col-recent-form {width: 6rem;}
 		.team-chip {
 			display: inline-flex;
 			align-items: center;
@@ -331,6 +351,41 @@ def theme_css(dark_mode: bool) -> str:
 		.result-W {background-color: #3D7A5F;}
 		.result-L {background-color: #B85C5C;}
 		.result-D {background-color: #7A7F87;}
+		.form-result {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			min-width: 1.35rem;
+			margin-right: 0.16rem;
+			font-weight: 800;
+		}
+		.form-W {color: #9FD5AA;}
+		.form-L {color: #E3A0A0;}
+		.form-D {color: #C7D0D5;}
+		.league-leader-card {
+			padding-top: 0.1rem;
+		}
+		.league-leader-label {
+			color: #B6C4CB;
+			font-size: 0.875rem;
+			font-weight: 400;
+			line-height: 1.25;
+			margin-bottom: 0.16rem;
+		}
+		.league-leader-value {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.42rem;
+			color: #F4F7F8;
+			font-size: 1.55rem;
+			font-weight: 700;
+			line-height: 1.2;
+		}
+		.league-leader-pct {
+			color: #B6C4CB;
+			font-size: 1rem;
+			font-weight: 650;
+		}
 		.diff-plus {color: #9FD5AA; font-weight: 700;}
 		.diff-minus {color: #E3A0A0; font-weight: 700;}
 		.diff-zero {color: #C7D0D5; font-weight: 700;}
@@ -350,6 +405,7 @@ def theme_css(dark_mode: bool) -> str:
 	section[data-testid="stSidebar"] {background-color: #F5F7F8;}
 	.block-container {padding-top: 1.5rem; padding-bottom: 1.5rem;}
 	[data-testid="stMetricValue"] {font-size: 1.55rem;}
+	[data-testid="stMetricLabel"] {color: #6D7A80; font-size: 0.875rem;}
 		.stTabs [data-baseweb="tab-list"] {gap: 0.5rem;}
 		.stTabs [data-baseweb="tab"] p {font-size: 1.06rem; font-weight: 650;}
 	section[data-testid="stSidebar"] [data-baseweb="tag"] {
@@ -366,32 +422,45 @@ def theme_css(dark_mode: bool) -> str:
 	.standings-table-wrap {
 		border: 1px solid #DDE4E8;
 		border-radius: 8px;
-		overflow: hidden;
+		overflow-x: auto;
 		background-color: #FFFFFF;
 	}
-	.standings-table {
-		width: 100%;
-		border-collapse: collapse;
-		font-size: 0.9rem;
-	}
-	.standings-table th {
-		background-color: #F4F7F8;
-		color: #263238;
-		border-bottom: 1px solid #DDE4E8;
-		padding: 0.55rem 0.6rem;
-		text-align: left;
-		white-space: nowrap;
-	}
-	.standings-table td {
-		background-color: #FFFFFF;
-		color: #263238;
-		border-bottom: 1px solid #E9EEF1;
-		padding: 0.48rem 0.6rem;
-		white-space: nowrap;
-	}
-	.standings-table tr:nth-child(even) td {
-		background-color: #FAFBFC;
-	}
+		.standings-table {
+			width: 100%;
+			min-width: 980px;
+			border-collapse: collapse;
+			font-size: 0.84rem;
+			table-layout: fixed;
+		}
+		.standings-table th {
+			background-color: #F4F7F8;
+			color: #263238;
+			border-bottom: 1px solid #DDE4E8;
+			padding: 0.48rem 0.42rem;
+			text-align: left;
+			white-space: nowrap;
+		}
+		.standings-table td {
+			background-color: #FFFFFF;
+			color: #263238;
+			border-bottom: 1px solid #E9EEF1;
+			padding: 0.42rem 0.42rem;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+		.standings-table tr:nth-child(even) td {
+			background-color: #FAFBFC;
+		}
+		.standings-table .col-team {width: 8.2rem;}
+		.standings-table .col-compact {width: 3rem; text-align: right;}
+		.standings-table .col-win-pct {width: 4rem; text-align: right;}
+		.standings-table .col-games-behind {width: 4rem; text-align: right;}
+		.standings-table .col-streak {width: 4rem;}
+		.standings-table .col-score {width: 3.7rem; text-align: right;}
+		.standings-table .col-run-diff {width: 4.1rem; text-align: right;}
+		.standings-table .col-average {width: 4.7rem; text-align: right;}
+		.standings-table .col-recent-form {width: 6rem;}
 	.team-chip {
 		display: inline-flex;
 		align-items: center;
@@ -461,11 +530,123 @@ def theme_css(dark_mode: bool) -> str:
 	.result-W {background-color: #3D7A5F;}
 	.result-L {background-color: #B85C5C;}
 	.result-D {background-color: #7A7F87;}
+	.form-result {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 1.35rem;
+		margin-right: 0.16rem;
+		font-weight: 800;
+	}
+	.form-W {color: #2E7D32;}
+	.form-L {color: #B85C5C;}
+	.form-D {color: #6D7A80;}
+	.league-leader-card {
+		padding-top: 0.1rem;
+	}
+	.league-leader-label {
+		color: #6D7A80;
+		font-size: 0.875rem;
+		font-weight: 400;
+		line-height: 1.25;
+		margin-bottom: 0.16rem;
+	}
+	.league-leader-value {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.42rem;
+		color: #263238;
+		font-size: 1.55rem;
+		font-weight: 700;
+		line-height: 1.2;
+	}
+	.league-leader-pct {
+		color: #607D8B;
+		font-size: 1rem;
+		font-weight: 650;
+	}
 	.diff-plus {color: #2E7D32; font-weight: 700;}
 	.diff-minus {color: #B85C5C; font-weight: 700;}
 	.diff-zero {color: #6D7A80; font-weight: 700;}
 	</style>
 	"""
+
+
+def sidebar_filter_css(team_options: list[str]) -> str:
+	team_rules = []
+	for index, team in enumerate(team_options, start=1):
+		color = active_team_colors().get(team, "#8FA3AD" if ACTIVE_DARK_MODE else "#607D8B")
+		team_rules.append(
+			f"""
+	section[data-testid="stSidebar"] .st-key-filter_teams div[role="group"] > button[data-testid="stBaseButton-pills"]:nth-of-type({index}) {{
+		background-color: {hex_to_rgba(color, 0.08)} !important;
+		border-color: {hex_to_rgba(color, 0.46)} !important;
+		color: {color} !important;
+	}}
+	section[data-testid="stSidebar"] .st-key-filter_teams div[role="group"] > button[data-testid="stBaseButton-pillsActive"]:nth-of-type({index}) {{
+		background-color: {hex_to_rgba(color, 0.18 if ACTIVE_DARK_MODE else 0.12)} !important;
+		border-color: {hex_to_rgba(color, 0.86)} !important;
+		box-shadow: inset 0 0 0 1px {hex_to_rgba(color, 0.38)} !important;
+		color: {color} !important;
+	}}
+	section[data-testid="stSidebar"] .st-key-filter_teams div[role="group"] > button:nth-of-type({index}) p,
+	section[data-testid="stSidebar"] .st-key-filter_teams div[role="group"] > button:nth-of-type({index}) span {{
+		color: {color} !important;
+		font-weight: 760;
+	}}
+"""
+		)
+	return (
+		"""
+	<style>
+	section[data-testid="stSidebar"] .stButtonGroup div[role="group"] {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+		justify-content: flex-start !important;
+	}
+	section[data-testid="stSidebar"] [data-testid^="stBaseButton-pills"] {
+		min-height: 2.08rem;
+		border-radius: 999px;
+		flex-grow: 0 !important;
+		flex-shrink: 0 !important;
+		justify-content: center;
+		line-height: 1.15;
+		padding: 0.2rem 0.56rem;
+	}
+	section[data-testid="stSidebar"] [data-testid^="stBaseButton-pills"] p {
+		line-height: 1.15;
+		text-align: center;
+		width: 100%;
+	}
+	section[data-testid="stSidebar"] .st-key-filter_years [data-testid^="stBaseButton-pills"] {
+		flex-basis: 4rem !important;
+		max-width: 4rem !important;
+		min-width: 4rem !important;
+		width: 4rem !important;
+	}
+	section[data-testid="stSidebar"] .st-key-filter_months [data-testid^="stBaseButton-pills"] {
+		flex-basis: 3rem !important;
+		max-width: 3rem !important;
+		min-width: 3rem !important;
+		width: 3rem !important;
+	}
+	section[data-testid="stSidebar"] .st-key-filter_teams [data-testid^="stBaseButton-pills"] {
+		flex-basis: 4rem !important;
+		max-width: 4rem !important;
+		min-width: 4rem !important;
+		width: 4rem !important;
+	}
+	section[data-testid="stSidebar"] .st-key-filter_home_away [data-testid^="stBaseButton-pills"] {
+		flex-basis: 4rem !important;
+		max-width: 4rem !important;
+		min-width: 4rem !important;
+		width: 4rem !important;
+	}
+"""
+		+ "".join(team_rules)
+		+ "\n\t</style>"
+	)
 
 
 def month_label(value: Any) -> str:
@@ -936,14 +1117,43 @@ def tone_class(value: Any, threshold: float) -> str:
 	return "tone-neutral"
 
 
+def render_recent_form_html(value: Any) -> str:
+	if pd.isna(value):
+		return "-"
+	result_labels = {"W": "승", "L": "패", "D": "무"}
+	results = [result for result in str(value).split(",") if result]
+	if not results:
+		return "-"
+	return "".join(
+		f'<span class="form-result form-{html.escape(result)}">{html.escape(result_labels.get(result, result))}</span>'
+		for result in results
+	)
+
+
 def render_standings_table(standings: pd.DataFrame) -> None:
-	headers = ["팀", "경기", "승", "패", "무", "승률", "연속", "득점", "실점", "득실차", "평균 득점", "평균 실점"]
+	columns = [
+		("팀", "col-team"),
+		("경기", "col-compact"),
+		("승", "col-compact"),
+		("패", "col-compact"),
+		("무", "col-compact"),
+		("승률", "col-win-pct"),
+		("게임차", "col-games-behind"),
+		("연속", "col-streak"),
+		("득점", "col-score"),
+		("실점", "col-score"),
+		("득실차", "col-run-diff"),
+		("평균득점", "col-average"),
+		("평균실점", "col-average"),
+		("최근 5경기", "col-recent-form"),
+	]
 	rows = []
 	for _, row in standings.iterrows():
 		team = str(row.get("team") or "")
 		color = team_color(team)
 		win_pct = row.get("win_pct")
 		run_diff = row.get("run_diff")
+		games_behind = row.get("games_behind")
 		cells = [
 			f'<span class="team-chip" style="color:{html.escape(color)}"><span class="team-dot" style="background-color:{html.escape(color)}"></span>{html.escape(team)}</span>',
 			html.escape(format_int(row.get("games"))),
@@ -951,14 +1161,31 @@ def render_standings_table(standings: pd.DataFrame) -> None:
 			html.escape(format_int(row.get("losses"))),
 			html.escape(format_int(row.get("draws"))),
 			f'<span>{html.escape(format_pct(win_pct))}</span>',
+			html.escape("-" if pd.isna(games_behind) or float(games_behind) == 0 else format_float(games_behind, 1)),
 			html.escape(str(row.get("streak") or "-")),
 			html.escape(format_int(row.get("runs_for"))),
 			html.escape(format_int(row.get("runs_against"))),
 			f'<span>{html.escape(format_int(run_diff))}</span>',
 			html.escape(format_float(row.get("avg_runs_for"), 2)),
 			html.escape(format_float(row.get("avg_runs_against"), 2)),
+			render_recent_form_html(row.get("recent_5")),
 		]
-		cell_classes = ["", "", "", "", "", tone_class(win_pct, 0.5), "", "", "", tone_class(run_diff, 0), "", ""]
+		cell_classes = [
+			"col-team",
+			"col-compact",
+			"col-compact",
+			"col-compact",
+			"col-compact",
+			f"col-win-pct {tone_class(win_pct, 0.5)}".strip(),
+			"col-games-behind",
+			"col-streak",
+			"col-score",
+			"col-score",
+			f"col-run-diff {tone_class(run_diff, 0)}".strip(),
+			"col-average",
+			"col-average",
+			"col-recent-form",
+		]
 		rows.append(
 			"<tr>"
 			+ "".join(
@@ -967,7 +1194,9 @@ def render_standings_table(standings: pd.DataFrame) -> None:
 			)
 			+ "</tr>"
 		)
-	header_html = "".join(f"<th>{html.escape(header)}</th>" for header in headers)
+	header_html = "".join(
+		f'<th class="{column_class}">{html.escape(header)}</th>' for header, column_class in columns
+	)
 	body_html = "".join(rows)
 	st.markdown(
 		f'<div class="standings-table-wrap"><table class="standings-table"><thead><tr>{header_html}</tr></thead><tbody>{body_html}</tbody></table></div>',
@@ -1222,6 +1451,22 @@ def build_streaks(team_frame: pd.DataFrame) -> pd.DataFrame:
 	return pd.DataFrame(streaks)
 
 
+def build_recent_results(team_frame: pd.DataFrame, n: int = 5) -> pd.DataFrame:
+	final_frame = team_frame[team_frame["result"].isin({"W", "L", "D"})].copy()
+	if final_frame.empty:
+		return pd.DataFrame(columns=["team", "recent_5"])
+
+	sort_columns = [column for column in ["team", "game_date", "game_id"] if column in final_frame.columns]
+	final_frame = final_frame.sort_values(sort_columns)
+	recent_rows = final_frame.groupby("team", dropna=False).tail(n).copy()
+	recent = (
+		recent_rows.groupby("team", dropna=False)["result"]
+		.apply(lambda values: ",".join(values.astype(str).tolist()))
+		.reset_index(name="recent_5")
+	)
+	return recent
+
+
 def build_standings(team_frame: pd.DataFrame) -> pd.DataFrame:
 	final_frame = team_frame[team_frame["is_final"]].copy()
 	if final_frame.empty:
@@ -1255,7 +1500,18 @@ def build_standings(team_frame: pd.DataFrame) -> pd.DataFrame:
 		standings = standings.merge(streaks, on="team", how="left")
 	else:
 		standings["streak"] = pd.NA
-	return standings.sort_values(["win_pct", "wins", "run_diff"], ascending=[False, False, False])
+	recent = build_recent_results(final_frame, 5)
+	if not recent.empty:
+		standings = standings.merge(recent, on="team", how="left")
+	else:
+		standings["recent_5"] = pd.NA
+	standings = standings.sort_values(["win_pct", "wins", "run_diff"], ascending=[False, False, False]).reset_index(drop=True)
+	if standings.empty:
+		standings["games_behind"] = pd.NA
+	else:
+		leader = standings.iloc[0]
+		standings["games_behind"] = ((leader["wins"] - standings["wins"]) + (standings["losses"] - leader["losses"])) / 2
+	return standings
 
 
 def display_standings_table(standings: pd.DataFrame) -> None:
@@ -1263,6 +1519,26 @@ def display_standings_table(standings: pd.DataFrame) -> None:
 		st.info("선택한 조건에 완료 경기 데이터가 없습니다.")
 		return
 	render_standings_table(standings)
+
+
+def render_league_leader_metric(row: pd.Series | None) -> None:
+	if row is None or row.empty:
+		st.metric("리그 1위", "-")
+		return
+	team = str(row.get("team") or "-")
+	color = team_color(team)
+	st.markdown(
+		f"""
+		<div class="league-leader-card">
+			<div class="league-leader-label">리그 1위</div>
+			<div class="league-leader-value">
+				<span style="color:{html.escape(color)}">{html.escape(team)}</span>
+				<span class="league-leader-pct">{html.escape(format_pct(row.get("win_pct")))}</span>
+			</div>
+		</div>
+		""",
+		unsafe_allow_html=True,
+	)
 
 
 def plot_empty(message: str) -> None:
@@ -1298,17 +1574,31 @@ def apply_layout(fig: go.Figure, height: int = 360) -> go.Figure:
 def filter_data(schedule: pd.DataFrame, team: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, list[str]]:
 	schedule = schedule[schedule["game_status"] == "final"].copy()
 	team = team[team["is_final"]].copy()
-	year_options = sorted(schedule["season_year_label"].dropna().unique().tolist())
-	default_years = ["2026"] if "2026" in year_options else year_options[-1:]
+	year_options = sorted(schedule["season_year_label"].dropna().unique().tolist(), reverse=True)
+	default_years = year_options[:1]
 	month_options = sorted(schedule["source_month_label"].dropna().unique().tolist())
 	team_options = sorted(team["team"].dropna().astype(str).unique().tolist())
 
 	with st.sidebar:
 		st.header("필터")
-		selected_years = st.multiselect("연도", year_options, default=default_years)
-		selected_months = st.multiselect("월", month_options, default=month_options)
-		selected_teams = st.multiselect("팀", team_options, default=team_options)
-		selected_home_away = st.multiselect("홈/원정", HOME_AWAY_ORDER, default=HOME_AWAY_ORDER)
+		st.markdown(sidebar_filter_css(team_options), unsafe_allow_html=True)
+		selected_years = st.pills(
+			"연도", year_options, default=default_years, selection_mode="multi", width="stretch", key="filter_years"
+		) or []
+		selected_months = st.pills(
+			"월", month_options, default=month_options, selection_mode="multi", width="stretch", key="filter_months"
+		) or []
+		selected_teams = st.pills(
+			"팀", team_options, default=team_options, selection_mode="multi", width="stretch", key="filter_teams"
+		) or []
+		selected_home_away = st.pills(
+			"홈/원정",
+			HOME_AWAY_ORDER,
+			default=HOME_AWAY_ORDER,
+			selection_mode="multi",
+			width="stretch",
+			key="filter_home_away",
+		) or []
 
 	schedule_mask = schedule["season_year_label"].isin(selected_years) & schedule["source_month_label"].isin(selected_months)
 	if selected_teams:
@@ -1349,18 +1639,20 @@ def filter_data(schedule: pd.DataFrame, team: pd.DataFrame) -> tuple[pd.DataFram
 
 def render_overview(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 	standings = build_standings(team)
+	leader = standings.iloc[0] if not standings.empty else None
 
 	metric_cols = st.columns(4)
 	metric_cols[0].metric("경기 수", format_int(len(schedule)))
-	metric_cols[1].metric("총 관중 수", format_int(schedule["crowd"].sum()))
-	metric_cols[2].metric("평균 관중", format_int(schedule["crowd"].mean()))
-	metric_cols[3].metric("평균 경기 시간", f"{format_float(schedule['game_duration_min'].mean(), 0)}분")
+	with metric_cols[1]:
+		render_league_leader_metric(leader)
+	metric_cols[2].metric("총 관중 수", format_int(schedule["crowd"].sum()))
+	metric_cols[3].metric("평균 관중", format_int(schedule["crowd"].mean()))
 
-	left, right = st.columns([1.25, 1])
+	st.subheader("팀 순위")
+	display_standings_table(standings)
+
+	left, right = st.columns(2)
 	with left:
-		st.subheader("팀 순위")
-		display_standings_table(standings)
-	with right:
 		st.subheader("팀별 승률")
 		if standings.empty:
 			plot_empty("승률 데이터가 없습니다.")
@@ -1375,37 +1667,21 @@ def render_overview(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 			)
 			fig.update_yaxes(range=[0, max(0.75, standings["win_pct"].max() * 1.18)])
 			st.plotly_chart(fig, width="stretch")
-
-	left, right = st.columns(2)
-	with left:
-		st.subheader("1점차 승리 / 패배")
-		if standings.empty:
-			plot_empty("1점차 경기 데이터가 없습니다.")
-		else:
-			fig = paired_team_bar(
-				standings,
-				team_column="team",
-				first_column="one_run_games",
-				second_column="one_run_losses",
-				first_name="1점차 승리",
-				second_name="1점차 패배",
-				title_y="경기",
-			)
-			st.plotly_chart(fig, width="stretch")
 	with right:
-		st.subheader("영봉승 / 무득점패")
+		st.subheader("팀별 득실차")
 		if standings.empty:
-			plot_empty("완봉 데이터가 없습니다.")
+			plot_empty("득실차 데이터가 없습니다.")
 		else:
-			fig = paired_team_bar(
+			fig = team_metric_bar(
 				standings,
-				team_column="team",
-				first_column="shutout_wins",
-				second_column="shutout_losses",
-				first_name="영봉승",
-				second_name="무득점패",
-				title_y="경기",
+				x="team",
+				y="run_diff",
+				labels={"team": "팀", "run_diff": "득실차"},
+				sort_by="run_diff",
+				texttemplate="%{text:,.0f}",
 			)
+			max_abs = max(10, standings["run_diff"].abs().max() * 1.18)
+			fig.update_yaxes(range=[-max_abs, max_abs])
 			st.plotly_chart(fig, width="stretch")
 
 
@@ -1928,11 +2204,11 @@ def render_games(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 
 
 def main() -> None:
-	st.set_page_config(page_title="KBO Dashboard by Como", layout="wide")
+	st.set_page_config(page_title="Como Dashboard", layout="wide")
 	dark_mode = DEFAULT_DARK_MODE
 	set_visual_mode(dark_mode)
 	st.markdown(theme_css(dark_mode), unsafe_allow_html=True)
-	st.title("KBO Dashboard by Como")
+	st.title("Como Dashboard")
 
 	if not SCHEDULE_PATH.exists() or not TEAM_PATH.exists():
 		st.error("data/output 폴더에 필요한 엑셀 파일이 없습니다.")
@@ -1953,7 +2229,7 @@ def main() -> None:
 	)
 
 	overview_tab, team_tab, matchup_tab, flow_tab, attendance_tab, games_tab = st.tabs(
-		["요약", "팀", "상대전적", "흐름", "관중/구장", "경기"]
+		["리그", "팀", "상대전적", "흐름", "관중/구장", "경기"]
 	)
 
 	with overview_tab:
