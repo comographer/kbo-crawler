@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import html
+import json
 from pathlib import Path
 from typing import Any
 
@@ -9,6 +10,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+import streamlit.components.v1 as components
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -91,6 +93,92 @@ ACTIVE_TEAM_COLORS = TEAM_COLORS.copy()
 ACTIVE_GREEN_SCALE = GREEN_SCALE
 ACTIVE_SOFT_GREEN_SCALE = SOFT_GREEN_SCALE
 ACTIVE_PLOT_TEMPLATE = PLOT_TEMPLATE
+DARK_MODE_STORAGE_KEY = "kbo_dashboard_dark_mode"
+DARK_MODE_QUERY_KEY = "dark_mode"
+
+
+def parse_bool(value: Any) -> bool | None:
+	if value is None:
+		return None
+	if isinstance(value, list):
+		value = value[-1] if value else None
+	if isinstance(value, bool):
+		return value
+	text = str(value).strip().lower()
+	if text in {"1", "true", "yes", "y", "on", "dark"}:
+		return True
+	if text in {"0", "false", "no", "n", "off", "light"}:
+		return False
+	return None
+
+
+def query_param_bool(name: str) -> bool | None:
+	try:
+		return parse_bool(st.query_params.get(name))
+	except Exception:
+		return None
+
+
+def restore_dark_mode_from_browser() -> None:
+	components.html(
+		f"""
+		<script>
+		(() => {{
+			const storageKey = {json.dumps(DARK_MODE_STORAGE_KEY)};
+			const queryKey = {json.dumps(DARK_MODE_QUERY_KEY)};
+			try {{
+				const parentWindow = window.parent;
+				const storedValue = parentWindow.localStorage.getItem(storageKey);
+				if (storedValue !== "true" && storedValue !== "false") {{
+					return;
+				}}
+				const url = new URL(parentWindow.location.href);
+				if (url.searchParams.get(queryKey) === storedValue) {{
+					return;
+				}}
+				url.searchParams.set(queryKey, storedValue);
+				parentWindow.history.replaceState(null, "", url.toString());
+				parentWindow.location.reload();
+			}} catch (error) {{}}
+		}})();
+		</script>
+		""",
+		height=0,
+	)
+
+
+def initialize_dark_mode_state() -> None:
+	query_value = query_param_bool(DARK_MODE_QUERY_KEY)
+	if query_value is not None and st.session_state.get("_dark_mode_query_value") != query_value:
+		st.session_state["dark_mode"] = query_value
+		st.session_state["_dark_mode_query_value"] = query_value
+	if "dark_mode" not in st.session_state:
+		st.session_state["dark_mode"] = False
+
+
+def persist_dark_mode_to_browser(dark_mode: bool) -> None:
+	value = "true" if dark_mode else "false"
+	components.html(
+		f"""
+		<script>
+		(() => {{
+			const storageKey = {json.dumps(DARK_MODE_STORAGE_KEY)};
+			const queryKey = {json.dumps(DARK_MODE_QUERY_KEY)};
+			const value = {json.dumps(value)};
+			try {{
+				const parentWindow = window.parent;
+				parentWindow.localStorage.setItem(storageKey, value);
+				const url = new URL(parentWindow.location.href);
+				if (url.searchParams.get(queryKey) !== value) {{
+					url.searchParams.set(queryKey, value);
+					parentWindow.history.replaceState(null, "", url.toString());
+				}}
+			}} catch (error) {{}}
+		}})();
+		</script>
+		""",
+		height=0,
+	)
 
 
 def hex_to_rgb(value: str) -> tuple[int, int, int]:
@@ -714,6 +802,83 @@ def render_recent_games_table(recent: pd.DataFrame) -> None:
 	st.markdown(
 		f'<div class="recent-table-wrap"><table class="recent-table"><thead><tr>{header_html}</tr></thead><tbody>{body_html}</tbody></table></div>',
 		unsafe_allow_html=True,
+	)
+
+
+def build_team_extreme_games(team: pd.DataFrame, metric_column: str, ascending: bool) -> pd.DataFrame:
+	final_frame = team[team["is_final"]].dropna(subset=[metric_column]).copy()
+	if final_frame.empty:
+		return pd.DataFrame()
+
+	team_sorted = final_frame.sort_values(
+		["team", metric_column, "game_date", "game_id"],
+		ascending=[True, ascending, False, False],
+	)
+	extreme = team_sorted.groupby("team", dropna=False).head(1).copy()
+	return extreme.sort_values(
+		[metric_column, "game_date", "game_id", "team"],
+		ascending=[ascending, False, False, True],
+	).reset_index(drop=True)
+
+
+def prepare_team_extreme_table(
+	frame: pd.DataFrame,
+	metric_column: str,
+	metric_label: str,
+	ascending: bool,
+) -> pd.DataFrame:
+	if frame.empty:
+		return pd.DataFrame()
+	display = frame.copy()
+	display["순위"] = display[metric_column].rank(method="min", ascending=ascending).astype("Int64")
+	display["스코어"] = display.apply(lambda row: f"{format_int(row.get('runs_for'))} - {format_int(row.get('runs_against'))}", axis=1)
+	table = display[
+		[
+			"순위",
+			"team",
+			"game_date",
+			metric_column,
+			"opponent",
+			"home_away_label",
+			"result",
+			"스코어",
+			"stadium",
+			"crowd",
+		]
+	].rename(
+		columns={
+			"team": "팀",
+			"game_date": "날짜",
+			metric_column: metric_label,
+			"opponent": "상대",
+			"home_away_label": "홈/원정",
+			"result": "결과",
+			"stadium": "구장",
+			"crowd": "관중",
+		}
+	)
+	return table
+
+
+def render_team_extreme_table(
+	frame: pd.DataFrame,
+	metric_column: str,
+	metric_label: str,
+	empty_message: str,
+	ascending: bool = False,
+) -> None:
+	table = prepare_team_extreme_table(frame, metric_column, metric_label, ascending)
+	if table.empty:
+		plot_empty(empty_message)
+		return
+	render_table(
+		table,
+		column_config={
+			"순위": st.column_config.NumberColumn("순위", format="%d"),
+			"날짜": st.column_config.DateColumn("날짜"),
+			metric_label: st.column_config.NumberColumn(metric_label, format="%.0f"),
+			"관중": st.column_config.NumberColumn("관중", format="%d"),
+		},
 	)
 
 
@@ -1412,40 +1577,33 @@ def render_attendance(schedule: pd.DataFrame, home_team_source: pd.DataFrame, du
 			st.plotly_chart(apply_layout(fig), width="stretch")
 
 
-def render_games(schedule: pd.DataFrame) -> None:
-	final_schedule = schedule[schedule["game_status"] == "final"].copy()
+def render_games(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
+	final_team = team[team["is_final"]].copy()
 	left, right = st.columns(2)
 	with left:
-		st.subheader("관중 상위 경기")
-		top_crowd = final_schedule.sort_values("crowd", ascending=False).head(15)
-		render_table(
-			top_crowd[["game_date", "matchup", "stadium", "crowd", "total_runs", "game_duration_min"]],
-			column_config={
-				"game_date": st.column_config.DateColumn("날짜"),
-				"matchup": "경기",
-				"stadium": "구장",
-				"crowd": st.column_config.NumberColumn("관중", format="%d"),
-				"total_runs": st.column_config.NumberColumn("총 득점", format="%.0f"),
-				"game_duration_min": st.column_config.NumberColumn("시간(분)", format="%.0f"),
-			},
-		)
+		st.subheader("팀별 최다 득점 경기")
+		top_scoring = build_team_extreme_games(final_team, "runs_for", ascending=False)
+		render_team_extreme_table(top_scoring, "runs_for", "득점", "팀별 최다 득점 경기 데이터가 없습니다.")
 	with right:
-		st.subheader("고득점 경기")
-		high_scoring = final_schedule.sort_values("total_runs", ascending=False).head(15)
-		render_table(
-			high_scoring[["game_date", "matchup", "away_score", "home_score", "total_runs", "stadium"]],
-			column_config={
-				"game_date": st.column_config.DateColumn("날짜"),
-				"matchup": "경기",
-				"away_score": st.column_config.NumberColumn("원정 득점", format="%.0f"),
-				"home_score": st.column_config.NumberColumn("홈 득점", format="%.0f"),
-				"total_runs": st.column_config.NumberColumn("총 득점", format="%.0f"),
-				"stadium": "구장",
-			},
-		)
+		st.subheader("팀별 최다 실점 경기")
+		top_allowed = build_team_extreme_games(final_team, "runs_against", ascending=False)
+		render_team_extreme_table(top_allowed, "runs_against", "실점", "팀별 최다 실점 경기 데이터가 없습니다.")
+
+	left, right = st.columns(2)
+	with left:
+		st.subheader("팀별 최장 시간 경기")
+		longest = build_team_extreme_games(final_team, "game_duration_min", ascending=False)
+		render_team_extreme_table(longest, "game_duration_min", "시간(분)", "팀별 최장 시간 경기 데이터가 없습니다.")
+	with right:
+		st.subheader("팀별 최단 시간 경기")
+		shortest = build_team_extreme_games(final_team, "game_duration_min", ascending=True)
+		render_team_extreme_table(shortest, "game_duration_min", "시간(분)", "팀별 최단 시간 경기 데이터가 없습니다.", ascending=True)
 
 	st.subheader("경기 목록")
-	table = schedule.sort_values(["season_year", "game_date", "game_start_time", "game_id"])[
+	table = schedule.sort_values(
+		["season_year", "game_date", "game_start_time", "game_id"],
+		ascending=[False, False, False, False],
+	)[
 		[
 			"season_year_label",
 			"game_id",
@@ -1487,8 +1645,11 @@ def render_games(schedule: pd.DataFrame) -> None:
 
 def main() -> None:
 	st.set_page_config(page_title="KBO Dashboard by Como", layout="wide")
+	restore_dark_mode_from_browser()
+	initialize_dark_mode_state()
 	with st.sidebar:
-		dark_mode = st.toggle("다크모드", value=False)
+		dark_mode = st.toggle("다크모드", key="dark_mode")
+	persist_dark_mode_to_browser(dark_mode)
 	set_visual_mode(dark_mode)
 	st.markdown(theme_css(dark_mode), unsafe_allow_html=True)
 	st.title("KBO Dashboard by Como")
@@ -1524,7 +1685,7 @@ def main() -> None:
 	with attendance_tab:
 		render_attendance(attendance_schedule, attendance_team, filtered_team)
 	with games_tab:
-		render_games(filtered_schedule)
+		render_games(filtered_schedule, filtered_team)
 
 
 if __name__ == "__main__":
