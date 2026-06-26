@@ -1146,6 +1146,22 @@ def paired_team_bar(
 	return apply_layout(fig)
 
 
+def two_value_bar(first_name: str, first_value: Any, second_name: str, second_value: Any, title_y: str = "경기") -> go.Figure:
+	values = [0 if pd.isna(first_value) else first_value, 0 if pd.isna(second_value) else second_value]
+	fig = go.Figure()
+	fig.add_bar(
+		x=[first_name, second_name],
+		y=values,
+		marker_color=[RESULT_COLORS["W"], RESULT_COLORS["L"]],
+		text=values,
+		textposition="outside",
+		cliponaxis=False,
+	)
+	fig.update_traces(texttemplate="%{text:,.0f}")
+	fig.update_layout(showlegend=False, yaxis_title=title_y, xaxis_title="")
+	return apply_layout(fig, height=300)
+
+
 def result_count_bar(counts: pd.DataFrame, category_column: str, x_title: str) -> go.Figure:
 	plot_frame = counts.copy()
 	categories = plot_frame[category_column].astype(str).tolist()
@@ -1508,6 +1524,23 @@ def render_team_detail(team: pd.DataFrame, rank_order: list[str]) -> None:
 	metric_cols[5].metric("평균 안타", format_float(final_frame["hits_for"].mean(), 2))
 	metric_cols[6].metric("평균 실책", format_float(final_frame["errors_for"].mean(), 2))
 
+	flow_summary = build_flow_summary(team_frame)
+	if not flow_summary.empty:
+		flow_row = flow_summary.iloc[0]
+		left, right = st.columns(2)
+		with left:
+			st.subheader("역전승 / 역전패")
+			st.plotly_chart(
+				two_value_bar("역전승", flow_row["comeback_win"], "역전패", flow_row["blown_loss"]),
+				width="stretch",
+			)
+		with right:
+			st.subheader("끝내기승 / 끝내기패")
+			st.plotly_chart(
+				two_value_bar("끝내기승", flow_row["walkoff_win"], "끝내기패", flow_row["walkoff_loss"]),
+				width="stretch",
+			)
+
 	left, right = st.columns(2)
 	with left:
 		st.subheader("월별 성적")
@@ -1647,23 +1680,26 @@ def phase_run_diff_bar(summary: pd.DataFrame) -> go.Figure:
 	return apply_layout(fig)
 
 
-def render_flow_insights(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
-	final_team = team[team["is_final"]].copy()
-	flow_columns = [
-		"first_5_runs_for",
-		"first_5_runs_against",
-		"after_5_runs_for",
-		"after_5_runs_against",
-		"comeback_win",
-		"blown_loss",
-		"walkoff_win",
-		"walkoff_loss",
-	]
-	if final_team.empty or not final_team[flow_columns].notna().any().any():
-		st.info("선택한 조건에 이닝 흐름 데이터가 없습니다. 전체 기간 재크롤링 후 표시됩니다.")
-		return
+FLOW_COLUMNS = [
+	"first_5_runs_for",
+	"first_5_runs_against",
+	"after_5_runs_for",
+	"after_5_runs_against",
+	"comeback_win",
+	"blown_loss",
+	"walkoff_win",
+	"walkoff_loss",
+]
 
-	for column in flow_columns:
+
+def build_flow_summary(team: pd.DataFrame) -> pd.DataFrame:
+	final_team = team[team["is_final"]].copy()
+	if any(column not in final_team.columns for column in FLOW_COLUMNS):
+		return pd.DataFrame()
+	if final_team.empty or not final_team[FLOW_COLUMNS].notna().any().any():
+		return pd.DataFrame()
+
+	for column in FLOW_COLUMNS:
 		final_team[column] = final_team[column].fillna(0)
 
 	summary = (
@@ -1683,16 +1719,26 @@ def render_flow_insights(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 	)
 	summary["first_5_run_diff"] = summary["first_5_runs_for"] - summary["first_5_runs_against"]
 	summary["after_5_run_diff"] = summary["after_5_runs_for"] - summary["after_5_runs_against"]
+	return summary
+
+
+def render_flow_insights(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
+	summary = build_flow_summary(team)
+	if summary.empty:
+		st.info("선택한 조건에 이닝 흐름 데이터가 없습니다. 전체 기간 재크롤링 후 표시됩니다.")
+		return
 
 	final_schedule = schedule[schedule["game_status"] == "final"].copy()
 	extra_games = final_schedule[final_schedule["extra_inning_flag"].fillna(0) == 1].copy()
+	late_leader = summary.sort_values("after_5_run_diff", ascending=False).iloc[0]
+	late_leader_value = int(late_leader["after_5_run_diff"])
 	metric_cols = st.columns(6)
 	metric_cols[0].metric("연장 경기", format_int(len(extra_games)))
 	metric_cols[1].metric("역전승", format_int(summary["comeback_win"].sum()))
 	metric_cols[2].metric("역전패", format_int(summary["blown_loss"].sum()))
 	metric_cols[3].metric("끝내기승", format_int(summary["walkoff_win"].sum()))
 	metric_cols[4].metric("끝내기패", format_int(summary["walkoff_loss"].sum()))
-	metric_cols[5].metric("6회 이후 총 득실", format_int(summary["after_5_run_diff"].sum()))
+	metric_cols[5].metric("후반 득실 1위", f"{late_leader['team']} {late_leader_value:+,}")
 
 	left, right = st.columns(2)
 	with left:
