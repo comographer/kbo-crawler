@@ -1584,6 +1584,33 @@ def build_recent_results(team_frame: pd.DataFrame, n: int = 5) -> pd.DataFrame:
 	return recent
 
 
+def build_period_streak_extremes(team_frame: pd.DataFrame) -> pd.DataFrame:
+	decision_frame = team_frame[team_frame["result"].isin({"W", "L"})].copy()
+	if decision_frame.empty:
+		return pd.DataFrame(columns=["team", "max_win_streak", "max_loss_streak"])
+
+	sort_columns = [column for column in ["team", "game_date", "game_start_time", "game_id"] if column in decision_frame.columns]
+	decision_frame = decision_frame.sort_values(sort_columns)
+	rows = []
+	for team, group in decision_frame.groupby("team", dropna=False):
+		max_win = 0
+		max_loss = 0
+		current_result = None
+		current_count = 0
+		for result in group["result"].astype(str):
+			if result == current_result:
+				current_count += 1
+			else:
+				current_result = result
+				current_count = 1
+			if result == "W":
+				max_win = max(max_win, current_count)
+			elif result == "L":
+				max_loss = max(max_loss, current_count)
+		rows.append({"team": team, "max_win_streak": max_win, "max_loss_streak": max_loss})
+	return pd.DataFrame(rows)
+
+
 def build_standings(team_frame: pd.DataFrame) -> pd.DataFrame:
 	final_frame = team_frame[team_frame["is_final"]].copy()
 	if final_frame.empty:
@@ -1931,15 +1958,22 @@ def render_matchups(team: pd.DataFrame, rank_order: list[str]) -> None:
 		.reset_index()
 	)
 	matchups["win_pct"] = matchups["wins"].div((matchups["wins"] + matchups["losses"]).where((matchups["wins"] + matchups["losses"]) > 0))
+	matchups["games_record"] = matchups.apply(
+		lambda row: f"{format_int(row['games'])}({format_int(row['wins'])}-{format_int(row['losses'])}-{format_int(row['draws'])})",
+		axis=1,
+	)
 
 	metric = st.selectbox("지표", ["승률", "득실차", "평균 득점", "경기 수"])
 	metric_map = {"승률": "win_pct", "득실차": "run_diff", "평균 득점": "avg_runs_for", "경기 수": "games"}
 	pivot = matchups.pivot(index="team", columns="opponent", values=metric_map[metric])
+	text_pivot = matchups.pivot(index="team", columns="opponent", values="games_record") if metric == "경기 수" else None
 	row_order = [team_name for team_name in rank_order if team_name in pivot.index]
 	row_order += [team_name for team_name in pivot.index if team_name not in row_order]
 	column_order = [team_name for team_name in rank_order if team_name in pivot.columns]
 	column_order += [team_name for team_name in pivot.columns if team_name not in column_order]
 	pivot = pivot.reindex(index=row_order, columns=column_order)
+	if text_pivot is not None:
+		text_pivot = text_pivot.reindex(index=row_order, columns=column_order).fillna("")
 	height = max(260, min(520, 150 + len(pivot.index) * 38))
 	if metric == "승률":
 		fig = classified_heatmap(pivot, metric, 0.5, height)
@@ -1957,6 +1991,8 @@ def render_matchups(team: pd.DataFrame, rank_order: list[str]) -> None:
 		fig = apply_layout(fig, height=height)
 		fig.update_xaxes(title_text="")
 		fig.update_yaxes(title_text="", autorange="reversed")
+		if metric == "경기 수" and text_pivot is not None:
+			fig.update_traces(text=text_pivot.to_numpy(), texttemplate="%{text}")
 	st.plotly_chart(fig, width="stretch")
 
 
@@ -2040,15 +2076,13 @@ def render_flow_insights(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 
 	final_schedule = schedule[schedule["game_status"] == "final"].copy()
 	extra_games = final_schedule[final_schedule["extra_inning_flag"].fillna(0) == 1].copy()
-	late_leader = summary.sort_values("after_5_run_diff", ascending=False).iloc[0]
-	late_leader_value = int(late_leader["after_5_run_diff"])
-	metric_cols = st.columns(6)
+	streak_extremes = build_period_streak_extremes(team)
+	metric_cols = st.columns(5)
 	metric_cols[0].metric("연장 경기", format_int(len(extra_games)))
 	metric_cols[1].metric("역전승", format_int(summary["comeback_win"].sum()))
 	metric_cols[2].metric("역전패", format_int(summary["blown_loss"].sum()))
 	metric_cols[3].metric("끝내기승", format_int(summary["walkoff_win"].sum()))
 	metric_cols[4].metric("끝내기패", format_int(summary["walkoff_loss"].sum()))
-	metric_cols[5].metric("후반 득실 1위", f"{late_leader['team']} {late_leader_value:+,}")
 
 	left, right = st.columns(2)
 	with left:
@@ -2081,41 +2115,20 @@ def render_flow_insights(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 		)
 		st.plotly_chart(fig, width="stretch")
 	with right:
-		st.subheader("연장 경기 목록")
-		if extra_games.empty:
-			plot_empty("연장 경기 데이터가 없습니다.")
+		st.subheader("기간 중 팀별 최다 연승 / 최다 연패")
+		if streak_extremes.empty:
+			plot_empty("연승/연패 데이터가 없습니다.")
 		else:
-			extra_games["score"] = extra_games.apply(lambda row: f"{format_int(row.get('away_score'))} - {format_int(row.get('home_score'))}", axis=1)
-			extra_table = extra_games.sort_values(["game_date", "game_start_time", "game_id"], ascending=[False, False, False]).head(12)[
-				[
-					"game_date",
-					"matchup",
-					"score",
-					"innings_played",
-					"stadium",
-					"game_duration_min",
-					"crowd",
-				]
-			].rename(
-				columns={
-					"game_date": "날짜",
-					"matchup": "경기",
-					"score": "스코어",
-					"innings_played": "이닝",
-					"stadium": "구장",
-					"game_duration_min": "시간(분)",
-					"crowd": "관중",
-				}
+			fig = paired_team_bar(
+				streak_extremes,
+				team_column="team",
+				first_column="max_win_streak",
+				second_column="max_loss_streak",
+				first_name="최다 연승",
+				second_name="최다 연패",
+				title_y="경기",
 			)
-			render_table(
-				extra_table,
-				column_config={
-					"날짜": st.column_config.DateColumn("날짜"),
-					"이닝": st.column_config.NumberColumn("이닝", format="%d"),
-					"시간(분)": st.column_config.NumberColumn("시간(분)", format="%.0f"),
-					"관중": st.column_config.NumberColumn("관중", format="%d"),
-				},
-			)
+			st.plotly_chart(fig, width="stretch")
 
 	st.subheader("팀별 흐름 요약")
 	summary_table = summary.sort_values(["after_5_run_diff", "first_5_run_diff"], ascending=[False, False])[
@@ -2329,11 +2342,11 @@ def render_games(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 
 
 def main() -> None:
-	st.set_page_config(page_title="Como Dashboard", layout="wide")
+	st.set_page_config(page_title="KBO Dashboard", layout="wide")
 	dark_mode = DEFAULT_DARK_MODE
 	set_visual_mode(dark_mode)
 	st.markdown(theme_css(dark_mode), unsafe_allow_html=True)
-	st.title("Como Dashboard")
+	st.title("KBO Dashboard")
 
 	if not SCHEDULE_PATH.exists() or not TEAM_PATH.exists():
 		st.error("data/output 폴더에 필요한 엑셀 파일이 없습니다.")
