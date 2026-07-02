@@ -1076,6 +1076,69 @@ def render_recent_games_table(recent: pd.DataFrame) -> None:
 	)
 
 
+def render_league_recent10_table(summary: pd.DataFrame) -> None:
+	if summary.empty:
+		plot_empty("최근 10경기 데이터가 없습니다.")
+		return
+
+	headers = ["팀", "최근 10경기 (승/패/무)", "득점", "실점", "득실차", "평균 득점", "평균 실점", "평균 안타"]
+	rows = []
+	for _, row in summary.iterrows():
+		team = str(row.get("team") or "")
+		run_diff = row.get("run_diff")
+		cells = [
+			team_chip_html(team),
+			html.escape(f"{format_int(row.get('wins'))}-{format_int(row.get('losses'))}-{format_int(row.get('draws'))}"),
+			html.escape(format_int(row.get("runs_for"))),
+			html.escape(format_int(row.get("runs_against"))),
+			f'<span class="{tone_class(run_diff, 0)}">{html.escape(format_int(run_diff))}</span>',
+			html.escape(format_float(row.get("avg_runs_for"), 2)),
+			html.escape(format_float(row.get("avg_runs_against"), 2)),
+			html.escape(format_float(row.get("avg_hits_for"), 2)),
+		]
+		rows.append("<tr>" + "".join(f"<td>{cell}</td>" for cell in cells) + "</tr>")
+
+	header_html = "".join(f"<th>{html.escape(header)}</th>" for header in headers)
+	body_html = "".join(rows)
+	st.markdown(
+		f'<div class="kbo-table-wrap"><table class="kbo-table"><thead><tr>{header_html}</tr></thead><tbody>{body_html}</tbody></table></div>',
+		unsafe_allow_html=True,
+	)
+
+
+def render_flow_summary_table(summary: pd.DataFrame) -> None:
+	if summary.empty:
+		plot_empty("팀별 흐름 요약 데이터가 없습니다.")
+		return
+
+	headers = ["팀", "경기", "전반 득실차", "후반 득실차", "역전승", "역전패", "끝내기승", "끝내기패", "연장경기수", "최다연승", "최다연패"]
+	rows = []
+	for _, row in summary.iterrows():
+		first_diff = row.get("first_5_run_diff")
+		late_diff = row.get("after_5_run_diff")
+		cells = [
+			team_chip_html(row.get("team")),
+			html.escape(format_int(row.get("games"))),
+			f'<span class="{tone_class(first_diff, 0)}">{html.escape(format_int(first_diff))}</span>',
+			f'<span class="{tone_class(late_diff, 0)}">{html.escape(format_int(late_diff))}</span>',
+			html.escape(format_int(row.get("comeback_win"))),
+			html.escape(format_int(row.get("blown_loss"))),
+			html.escape(format_int(row.get("walkoff_win"))),
+			html.escape(format_int(row.get("walkoff_loss"))),
+			html.escape(format_int(row.get("extra_games"))),
+			html.escape(format_int(row.get("max_win_streak"))),
+			html.escape(format_int(row.get("max_loss_streak"))),
+		]
+		rows.append("<tr>" + "".join(f"<td>{cell}</td>" for cell in cells) + "</tr>")
+
+	header_html = "".join(f"<th>{html.escape(header)}</th>" for header in headers)
+	body_html = "".join(rows)
+	st.markdown(
+		f'<div class="kbo-table-wrap"><table class="kbo-table"><thead><tr>{header_html}</tr></thead><tbody>{body_html}</tbody></table></div>',
+		unsafe_allow_html=True,
+	)
+
+
 def build_team_extreme_games(team: pd.DataFrame, metric_column: str, ascending: bool) -> pd.DataFrame:
 	final_frame = team[team["is_final"]].dropna(subset=[metric_column]).copy()
 	if final_frame.empty:
@@ -1164,6 +1227,15 @@ def tone_class(value: Any, threshold: float) -> str:
 	if float(value) < threshold:
 		return "tone-negative"
 	return "tone-neutral"
+
+
+def team_chip_html(team: Any) -> str:
+	team_name = str(team or "")
+	color = team_color(team_name)
+	return (
+		f'<span class="team-chip" style="color:{html.escape(color)}">'
+		f'<span class="team-dot" style="background-color:{html.escape(color)}"></span>{html.escape(team_name)}</span>'
+	)
 
 
 def render_recent_form_html(value: Any) -> str:
@@ -1541,25 +1613,26 @@ def classified_heatmap(value_frame: pd.DataFrame, metric: str, threshold: float,
 
 
 def build_streaks(team_frame: pd.DataFrame) -> pd.DataFrame:
-	decision_frame = team_frame[team_frame["result"].isin({"W", "L"})].copy()
-	if decision_frame.empty:
+	final_frame = team_frame[team_frame["result"].isin({"W", "L", "D"})].copy()
+	if final_frame.empty:
 		return pd.DataFrame(columns=["team", "streak"])
 
-	latest_year = decision_frame["season_year"].max()
-	latest_year_frame = decision_frame[decision_frame["season_year"] == latest_year]
-	latest_month = latest_year_frame["source_month"].max()
-	latest_frame = latest_year_frame[latest_year_frame["source_month"] == latest_month].copy()
-	sort_columns = [column for column in ["team", "game_date", "game_id"] if column in latest_frame.columns]
-	latest_frame = latest_frame.sort_values(sort_columns, ascending=[True, False, False][: len(sort_columns)])
+	sort_columns = [column for column in ["team", "game_date", "game_start_time", "game_id"] if column in final_frame.columns]
+	final_frame = final_frame.sort_values(sort_columns, ascending=[True, *([False] * (len(sort_columns) - 1))])
 
 	streaks = []
-	for team, group in latest_frame.groupby("team", dropna=False):
+	for team, group in final_frame.groupby("team", dropna=False):
 		results = group["result"].astype(str).tolist()
 		if not results:
 			continue
-		latest_result = results[0]
+		latest_result = next((result for result in results if result in {"W", "L"}), None)
+		if latest_result is None:
+			streaks.append({"team": team, "streak": "무"})
+			continue
 		count = 0
 		for result in results:
+			if result == "D":
+				continue
 			if result != latest_result:
 				break
 			count += 1
@@ -1582,6 +1655,39 @@ def build_recent_results(team_frame: pd.DataFrame, n: int = 5) -> pd.DataFrame:
 		.reset_index(name="recent_5")
 	)
 	return recent
+
+
+def build_team_recent_summary(team_frame: pd.DataFrame, n: int = 10) -> pd.DataFrame:
+	final_frame = team_frame[team_frame["result"].isin({"W", "L", "D"})].copy()
+	if final_frame.empty:
+		return pd.DataFrame()
+
+	sort_columns = [column for column in ["team", "game_date", "game_start_time", "game_id"] if column in final_frame.columns]
+	final_frame = final_frame.sort_values(sort_columns)
+	recent = final_frame.groupby("team", dropna=False).tail(n).copy()
+	summary = (
+		recent.groupby("team", dropna=False)
+		.agg(
+			games=("game_id", "count"),
+			wins=("win_flag", "sum"),
+			losses=("loss_flag", "sum"),
+			draws=("draw_flag", "sum"),
+			runs_for=("runs_for", "sum"),
+			runs_against=("runs_against", "sum"),
+			run_diff=("run_diff", "sum"),
+			avg_runs_for=("runs_for", "mean"),
+			avg_runs_against=("runs_against", "mean"),
+			avg_hits_for=("hits_for", "mean"),
+		)
+		.reset_index()
+	)
+	decision_games = summary["wins"] + summary["losses"]
+	summary["recent_win_pct"] = summary["wins"].div(decision_games.where(decision_games > 0))
+	return summary.sort_values(
+		["recent_win_pct", "wins", "run_diff", "runs_for"],
+		ascending=[False, False, False, False],
+		na_position="last",
+	)
 
 
 def build_period_streak_extremes(team_frame: pd.DataFrame) -> pd.DataFrame:
@@ -1827,6 +1933,9 @@ def render_overview(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 			max_abs = max(10, standings["run_diff"].abs().max() * 1.18)
 			fig.update_yaxes(range=[-max_abs, max_abs])
 			st.plotly_chart(fig, width="stretch")
+
+	st.subheader("최근 10경기")
+	render_league_recent10_table(build_team_recent_summary(team, 10))
 
 
 def render_team_detail(team: pd.DataFrame, rank_order: list[str]) -> None:
@@ -2077,6 +2186,17 @@ def render_flow_insights(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 	final_schedule = schedule[schedule["game_status"] == "final"].copy()
 	extra_games = final_schedule[final_schedule["extra_inning_flag"].fillna(0) == 1].copy()
 	streak_extremes = build_period_streak_extremes(team)
+	extra_counts = (
+		team[(team["is_final"]) & (team["extra_inning_flag"].fillna(0) == 1)]
+		.groupby("team", dropna=False)
+		.size()
+		.reset_index(name="extra_games")
+	)
+	flow_table = summary.merge(streak_extremes, on="team", how="left").merge(extra_counts, on="team", how="left")
+	for column in ["max_win_streak", "max_loss_streak", "extra_games"]:
+		flow_table[column] = flow_table[column].fillna(0)
+	flow_table["total_run_diff"] = flow_table["first_5_run_diff"] + flow_table["after_5_run_diff"]
+	flow_table = flow_table.sort_values(["max_win_streak", "total_run_diff"], ascending=[False, False])
 	metric_cols = st.columns(5)
 	metric_cols[0].metric("연장 경기", format_int(len(extra_games)))
 	metric_cols[1].metric("역전승", format_int(summary["comeback_win"].sum()))
@@ -2115,7 +2235,7 @@ def render_flow_insights(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 		)
 		st.plotly_chart(fig, width="stretch")
 	with right:
-		st.subheader("기간 중 팀별 최다 연승 / 최다 연패")
+		st.subheader("최다 연승 / 최다 연패")
 		if streak_extremes.empty:
 			plot_empty("연승/연패 데이터가 없습니다.")
 		else:
@@ -2131,53 +2251,7 @@ def render_flow_insights(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 			st.plotly_chart(fig, width="stretch")
 
 	st.subheader("팀별 흐름 요약")
-	summary_table = summary.sort_values(["after_5_run_diff", "first_5_run_diff"], ascending=[False, False])[
-		[
-			"team",
-			"games",
-			"first_5_runs_for",
-			"first_5_runs_against",
-			"first_5_run_diff",
-			"after_5_runs_for",
-			"after_5_runs_against",
-			"after_5_run_diff",
-			"comeback_win",
-			"blown_loss",
-			"walkoff_win",
-			"walkoff_loss",
-		]
-	].rename(
-		columns={
-			"team": "팀",
-			"games": "경기",
-			"first_5_runs_for": "5회까지 득점",
-			"first_5_runs_against": "5회까지 실점",
-			"first_5_run_diff": "5회까지 득실",
-			"after_5_runs_for": "6회 이후 득점",
-			"after_5_runs_against": "6회 이후 실점",
-			"after_5_run_diff": "6회 이후 득실",
-			"comeback_win": "역전승",
-			"blown_loss": "역전패",
-			"walkoff_win": "끝내기승",
-			"walkoff_loss": "끝내기패",
-		}
-	)
-	render_table(
-		summary_table,
-		column_config={
-			"경기": st.column_config.NumberColumn("경기", format="%d"),
-			"5회까지 득점": st.column_config.NumberColumn("5회까지 득점", format="%.0f"),
-			"5회까지 실점": st.column_config.NumberColumn("5회까지 실점", format="%.0f"),
-			"5회까지 득실": st.column_config.NumberColumn("5회까지 득실", format="%.0f"),
-			"6회 이후 득점": st.column_config.NumberColumn("6회 이후 득점", format="%.0f"),
-			"6회 이후 실점": st.column_config.NumberColumn("6회 이후 실점", format="%.0f"),
-			"6회 이후 득실": st.column_config.NumberColumn("6회 이후 득실", format="%.0f"),
-			"역전승": st.column_config.NumberColumn("역전승", format="%.0f"),
-			"역전패": st.column_config.NumberColumn("역전패", format="%.0f"),
-			"끝내기승": st.column_config.NumberColumn("끝내기승", format="%.0f"),
-			"끝내기패": st.column_config.NumberColumn("끝내기패", format="%.0f"),
-		},
-	)
+	render_flow_summary_table(flow_table)
 
 
 def render_attendance(schedule: pd.DataFrame, home_team_source: pd.DataFrame, duration_team: pd.DataFrame) -> None:
