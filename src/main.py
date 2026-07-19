@@ -2,17 +2,27 @@ from __future__ import annotations
 
 import argparse
 import subprocess
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
 
-from crawler import build_schedule_dataframe, crawl_season, output_paths, write_schedule_workbook
+from crawler import SCOREBOARD_DETAIL_KEYS, build_schedule_dataframe, crawl_season, output_paths, write_schedule_workbook
 from team_sheets import build_team_sheet_rows, write_team_workbook
 
 
 DEFAULT_HISTORY_YEARS = "2015-2025"
 DEFAULT_HISTORY_MONTHS = "1-12"
+SCOREBOARD_CACHE_REQUIRED_KEYS = ("game_duration_min", "innings_played", "away_hits", "home_hits")
+SCOREBOARD_CACHE_REFRESH_DAYS = 3
+
+
+class GitCommandError(RuntimeError):
+	def __init__(self, args: list[str], result: subprocess.CompletedProcess[str]) -> None:
+		self.args_list = args
+		self.result = result
+		details = (result.stderr or result.stdout or "No Git output.").strip()
+		super().__init__(f"git {' '.join(args)} failed ({result.returncode}):\n{details}")
 
 
 def parse_int_list(value: str) -> list[int]:
@@ -54,13 +64,119 @@ def repo_root() -> Path:
 
 
 def run_git(args: list[str], root: Path) -> subprocess.CompletedProcess[str]:
-	return subprocess.run(
+	result = subprocess.run(
 		["git", *args],
 		cwd=root,
-		check=True,
+		check=False,
 		text=True,
 		capture_output=True,
 	)
+	if result.returncode != 0:
+		raise GitCommandError(args, result)
+	return result
+
+
+def current_branch(root: Path) -> str:
+	branch = run_git(["rev-parse", "--abbrev-ref", "HEAD"], root).stdout.strip()
+	if not branch or branch == "HEAD":
+		raise RuntimeError("--push requires a checked-out branch; detached HEAD is not supported.")
+	return branch
+
+
+def branch_ahead_behind(root: Path, remote_ref: str) -> tuple[int, int]:
+	output = run_git(["rev-list", "--left-right", "--count", f"HEAD...{remote_ref}"], root).stdout.strip()
+	try:
+		ahead_text, behind_text = output.split()
+		return int(ahead_text), int(behind_text)
+	except (TypeError, ValueError) as exc:
+		raise RuntimeError(f"Could not parse Git ahead/behind counts: {output!r}") from exc
+
+
+def changed_paths(root: Path, revision_range: str) -> list[str]:
+	output = run_git(["diff", "--name-only", revision_range], root).stdout
+	return [line.strip().replace("\\", "/") for line in output.splitlines() if line.strip()]
+
+
+def is_generated_data_path(path: str) -> bool:
+	normalized = path.replace("\\", "/")
+	if normalized.startswith("data/raw/"):
+		return True
+	if not normalized.startswith("data/output/") or not normalized.endswith(".xlsx"):
+		return False
+	name = normalized.rsplit("/", 1)[-1]
+	return (
+		name in {"kbo_schedule.xlsx", "kbo_team_sheets.xlsx"}
+		or name.startswith("kbo_schedule_history_")
+		or name.startswith("kbo_schedule_")
+		or name.startswith("kbo_team_sheets_")
+	)
+
+
+def merge_remote_generated_data(root: Path, remote_ref: str) -> None:
+	local_paths = changed_paths(root, f"{remote_ref}...HEAD")
+	unsafe_paths = [path for path in local_paths if not is_generated_data_path(path)]
+	if unsafe_paths:
+		formatted = "\n".join(f"- {path}" for path in unsafe_paths)
+		raise RuntimeError(
+			"Local and remote branches have diverged, and local commits include non-generated files. "
+			"Automatic merge was skipped:\n"
+			f"{formatted}"
+		)
+	try:
+		run_git(["merge", "--no-edit", "-X", "ours", remote_ref], root)
+	except GitCommandError:
+		subprocess.run(
+			["git", "merge", "--abort"],
+			cwd=root,
+			check=False,
+			text=True,
+			capture_output=True,
+		)
+		raise
+
+
+def prepare_publish_branch(root: Path) -> str:
+	status_lines = run_git(["status", "--porcelain"], root).stdout.splitlines()
+	if status_lines:
+		formatted = "\n".join(f"- {line}" for line in status_lines[:20])
+		raise RuntimeError(
+			"--push requires a clean working tree before crawling. Commit or stash these changes first:\n"
+			f"{formatted}"
+		)
+
+	branch = current_branch(root)
+	run_git(["fetch", "origin", branch], root)
+	remote_ref = f"origin/{branch}"
+	ahead, behind = branch_ahead_behind(root, remote_ref)
+	if behind == 0:
+		print(f"Git preflight: {branch} is up to date with {remote_ref}.")
+		return branch
+	if ahead == 0:
+		run_git(["merge", "--ff-only", remote_ref], root)
+		print(f"Git preflight: fast-forwarded {branch} to {remote_ref}.")
+		return branch
+
+	merge_remote_generated_data(root, remote_ref)
+	print(f"Git preflight: merged {remote_ref}; local generated data will be refreshed now.")
+	return branch
+
+
+def push_branch_with_retry(root: Path, branch: str) -> None:
+	try:
+		run_git(["push", "-u", "origin", branch], root)
+		return
+	except GitCommandError as exc:
+		details = f"{exc.result.stdout}\n{exc.result.stderr}".lower()
+		if "non-fast-forward" not in details and "fetch first" not in details:
+			raise
+
+	print("Remote changed during the crawl; fetching and retrying once.")
+	run_git(["fetch", "origin", branch], root)
+	remote_ref = f"origin/{branch}"
+	_, behind = branch_ahead_behind(root, remote_ref)
+	if behind:
+		merge_remote_generated_data(root, remote_ref)
+	run_git(["push", "-u", "origin", branch], root)
 
 
 def has_staged_changes(root: Path) -> bool:
@@ -130,6 +246,7 @@ def crawl_years(
 	months: list[int],
 	series_ids: str,
 	team_id: str,
+	scoreboard_cache_by_year: dict[int, dict[str, dict]] | None = None,
 ) -> list[dict]:
 	records = []
 	for year in years:
@@ -139,6 +256,7 @@ def crawl_years(
 				months,
 				series_ids=series_ids,
 				team_id=team_id,
+				cached_game_details=(scoreboard_cache_by_year or {}).get(year),
 			)
 		)
 	return records
@@ -157,6 +275,55 @@ def read_history_schedule(path: Path, history_years: list[int]) -> pd.DataFrame:
 
 	frame["season_year"] = pd.to_numeric(frame["season_year"], errors="coerce").astype("Int64")
 	return frame[frame["season_year"].isin(sorted(set(history_years)))].copy()
+
+
+def read_cached_scoreboard_details(path: Path, years: list[int]) -> dict[int, dict[str, dict]]:
+	if not path.exists():
+		return {}
+	try:
+		frame = pd.read_excel(path)
+	except (OSError, ValueError) as exc:
+		print(f"Could not read the existing schedule cache; using a full detail refresh: {exc}")
+		return {}
+
+	required_columns = {
+		"game_id",
+		"season_year",
+		"game_date",
+		"game_status",
+		*SCOREBOARD_CACHE_REQUIRED_KEYS,
+	}
+	if not required_columns.issubset(frame.columns):
+		return {}
+
+	frame["season_year"] = pd.to_numeric(frame["season_year"], errors="coerce").astype("Int64")
+	frame["game_date_parsed"] = pd.to_datetime(frame["game_date"], errors="coerce")
+	refresh_cutoff = pd.Timestamp(date.today() - timedelta(days=SCOREBOARD_CACHE_REFRESH_DAYS))
+	cached = frame[
+		frame["season_year"].isin(sorted(set(years)))
+		& frame["game_status"].eq("final")
+		& frame["game_date_parsed"].lt(refresh_cutoff)
+	].copy()
+	for column in SCOREBOARD_CACHE_REQUIRED_KEYS:
+		cached = cached[cached[column].notna()]
+
+	result: dict[int, dict[str, dict]] = {}
+	available_detail_keys = [key for key in SCOREBOARD_DETAIL_KEYS if key in cached.columns]
+	for row in cached.to_dict(orient="records"):
+		game_id = str(row.get("game_id") or "").strip()
+		season_year = row.get("season_year")
+		if not game_id or pd.isna(season_year):
+			continue
+		year = int(season_year)
+		result.setdefault(year, {})[game_id] = {key: row.get(key) for key in available_detail_keys}
+
+	cache_count = sum(len(values) for values in result.values())
+	if cache_count:
+		print(
+			f"Reusing {cache_count} completed-game scoreboards older than "
+			f"{SCOREBOARD_CACHE_REFRESH_DAYS} days."
+		)
+	return result
 
 
 def combine_schedule_frames(history_frame: pd.DataFrame | None, live_frame: pd.DataFrame) -> pd.DataFrame:
@@ -215,20 +382,23 @@ def commit_and_push_outputs(
 	else:
 		print("No generated data changes to commit.")
 
-	branch = run_git(["rev-parse", "--abbrev-ref", "HEAD"], root).stdout.strip()
-	run_git(["push", "-u", "origin", branch], root)
+	branch = current_branch(root)
+	push_branch_with_retry(root, branch)
 	print(f"Pushed {branch} to origin.")
 
 
 def main() -> int:
 	parser = build_argument_parser()
 	args = parser.parse_args()
+	if args.push:
+		prepare_publish_branch(repo_root())
 
 	months = parse_months(args.months)
 	years = parse_years(args.years) if args.years else [args.year]
 	history_years = parse_years(args.history_years)
 	history_months = parse_months(args.history_months)
 	paths = output_paths(years[-1])
+	scoreboard_cache_by_year = read_cached_scoreboard_details(paths.xlsx_path, years) if args.daily else {}
 	requested_history_workbook_path = history_cache_path(history_years, paths.xlsx_path.parent)
 	history_workbook_path: Path | None = None
 	history_frame: pd.DataFrame | None = None
@@ -254,6 +424,7 @@ def main() -> int:
 		months,
 		series_ids=args.series_ids,
 		team_id=args.team_id,
+		scoreboard_cache_by_year=scoreboard_cache_by_year,
 	)
 	live_frame = build_schedule_dataframe(live_records)
 	if history_frame is not None and not history_frame.empty and "season_year" in history_frame.columns:

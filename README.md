@@ -20,6 +20,8 @@ For the daily update, crawl only 2026 and merge it with the fixed 2015-2025 snap
 python src/main.py --daily --year 2026 --push
 ```
 
+Before crawling, `--push` fetches the remote branch and fast-forwards when possible. If only generated-data commits have diverged, it merges the remote history before refreshing the data. It stops before crawling when source or configuration changes are uncommitted.
+
 You can also narrow the crawl to a smaller range while testing:
 
 ```bash

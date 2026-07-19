@@ -99,7 +99,7 @@ def _prefixed_int(row: pd.Series, prefix: str, suffix: str) -> int | None:
 	return _to_int(row.get(f"{prefix}_{suffix}"))
 
 
-def _lead_states(row: pd.Series, prefix: str, opponent_prefix: str) -> list[tuple[int, int]]:
+def _lead_states(row: pd.Series, prefix: str) -> list[tuple[int, int]]:
 	away_score = 0
 	home_score = 0
 	states: list[tuple[int, int]] = []
@@ -118,16 +118,14 @@ def _lead_states(row: pd.Series, prefix: str, opponent_prefix: str) -> list[tupl
 	if prefix == "away":
 		return states
 	return [(home_score, away_score) for away_score, home_score in states]
-	return states
 
 
 def _comeback_flags(
 	row: pd.Series,
 	result: str,
 	prefix: str,
-	opponent_prefix: str,
 ) -> tuple[int, int]:
-	states = _lead_states(row, prefix, opponent_prefix)
+	states = _lead_states(row, prefix)
 	comeback_win = 1 if result == "W" and any(score_for < score_against for score_for, score_against in states) else 0
 	blown_loss = 1 if result == "L" and any(score_for > score_against for score_for, score_against in states) else 0
 	return comeback_win, blown_loss
@@ -177,7 +175,6 @@ def build_team_sheet_rows(schedule_frame: pd.DataFrame) -> pd.DataFrame:
 				row,
 				result,
 				prefix,
-				opponent_prefix,
 			)
 			walkoff_win, walkoff_loss = _walkoff_flags(home_away, result, walkoff_flag)
 			rows.append(

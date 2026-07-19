@@ -3,13 +3,15 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from excel_output import write_with_permission_fallback
 
@@ -22,6 +24,7 @@ SCOREBOARD_API_URL = f"{BASE_URL}/ws/Schedule.asmx/GetScoreBoardScroll"
 DEFAULT_SERIES_IDS = "0,9,6"
 DEFAULT_LEAGUE_ID = "1"
 DEFAULT_SCOREBOARD_TYPE = "3"
+REQUEST_TIMEOUT = (5, 30)
 SCOREBOARD_DETAIL_KEYS = (
 	"crowd",
 	"game_start_time",
@@ -69,7 +72,20 @@ class OutputPaths:
 
 def build_session() -> requests.Session:
 	session = requests.Session()
-	session.get(SCHEDULE_PAGE_URL, timeout=30)
+	retry = Retry(
+		total=3,
+		connect=3,
+		read=3,
+		status=3,
+		backoff_factor=0.5,
+		status_forcelist=(429, 500, 502, 503, 504),
+		allowed_methods=frozenset({"GET", "POST"}),
+	)
+	adapter = HTTPAdapter(max_retries=retry)
+	session.mount("https://", adapter)
+	session.mount("http://", adapter)
+	response = session.get(SCHEDULE_PAGE_URL, timeout=REQUEST_TIMEOUT)
+	response.raise_for_status()
 	return session
 
 
@@ -299,7 +315,7 @@ def fetch_schedule_month(
 			"teamId": team_id,
 		},
 		headers=schedule_headers(),
-		timeout=30,
+		timeout=REQUEST_TIMEOUT,
 	)
 	response.raise_for_status()
 	return response.json()
@@ -310,7 +326,7 @@ def fetch_game_list(session: requests.Session, date_key: str) -> list[dict[str, 
 		GAME_LIST_API_URL,
 		data={"leId": DEFAULT_LEAGUE_ID, "srId": "0,1,3,4,5,6,7,8,9", "date": date_key},
 		headers=schedule_headers(),
-		timeout=30,
+		timeout=REQUEST_TIMEOUT,
 	)
 	response.raise_for_status()
 	return response.json().get("game", [])
@@ -389,7 +405,7 @@ def fetch_scoreboard_scroll(session: requests.Session, record: dict[str, Any]) -
 			"gameId": game_id,
 		},
 		headers=scoreboard_headers(int(record.get("season_year") or 0), game_id, sr_id),
-		timeout=30,
+		timeout=REQUEST_TIMEOUT,
 	)
 	response.raise_for_status()
 	data = response.json()
@@ -506,51 +522,78 @@ def parse_months(value: str) -> list[int]:
 	return month_list or list(range(1, 13))
 
 
+def should_fetch_game_list(record: dict[str, Any], today_key: str) -> bool:
+	date_key = str(record.get("game_date_key") or "")
+	return record.get("game_status") == "final" or bool(date_key and date_key <= today_key)
+
+
 def crawl_season(
 	year: int,
 	months: list[int],
 	series_ids: str = DEFAULT_SERIES_IDS,
 	team_id: str = "",
+	cached_game_details: dict[str, dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
 	session = build_session()
 	records: list[dict[str, Any]] = []
 	seen_ids: set[str] = set()
 	game_list_cache: dict[str, list[dict[str, Any]]] = {}
 	used_game_ids_by_date: dict[str, set[str]] = {}
-	game_details_cache: dict[str, dict[str, Any]] = {}
+	game_details_cache: dict[str, dict[str, Any]] = dict(cached_game_details or {})
+	reused_game_ids: set[str] = set()
+	fetched_game_ids: set[str] = set()
 	paths = output_paths(year)
+	today_key = date.today().strftime("%Y%m%d")
+	try:
+		for month in months:
+			payload = fetch_schedule_month(
+				session,
+				year,
+				month,
+				series_ids=series_ids,
+				team_id=team_id,
+			)
+			save_raw_month(year, month, payload, paths.raw_dir)
+			month_records = parse_schedule_rows(year, month, payload.get("rows", []))
 
-	for month in months:
-		payload = fetch_schedule_month(
-			session,
-			year,
-			month,
-			series_ids=series_ids,
-			team_id=team_id,
-		)
-		save_raw_month(year, month, payload, paths.raw_dir)
-		month_records = parse_schedule_rows(year, month, payload.get("rows", []))
+			for record in month_records:
+				date_key = record["game_date_key"]
+				game_id = str(record.get("game_id") or "")
+				has_reusable_details = record.get("game_status") == "final" and game_id in game_details_cache
+				if should_fetch_game_list(record, today_key) and not has_reusable_details:
+					if date_key not in game_list_cache:
+						game_list_cache[date_key] = fetch_game_list(session, date_key)
+					if date_key not in used_game_ids_by_date:
+						used_game_ids_by_date[date_key] = set()
+					record = enrich_record_with_game_list(record, game_list_cache[date_key], used_game_ids_by_date[date_key])
+				game_id = str(record.get("game_id") or "")
+				if (
+					record.get("game_status") == "final"
+					and game_id
+					and game_id not in game_details_cache
+				):
+					game_details_cache[game_id] = fetch_scoreboard_scroll(session, record)
+					fetched_game_ids.add(game_id)
+				if record.get("game_status") == "final" and game_id in game_details_cache:
+					details = game_details_cache[game_id]
+					if game_id not in fetched_game_ids:
+						reused_game_ids.add(game_id)
+					for key in SCOREBOARD_DETAIL_KEYS:
+						if has_value(details.get(key)):
+							record[key] = details[key]
 
-		for record in month_records:
-			date_key = record["game_date_key"]
-			if date_key not in game_list_cache:
-				game_list_cache[date_key] = fetch_game_list(session, date_key)
-			if date_key not in used_game_ids_by_date:
-				used_game_ids_by_date[date_key] = set()
-			record = enrich_record_with_game_list(record, game_list_cache[date_key], used_game_ids_by_date[date_key])
-			if record.get("game_id") and record["game_id"] not in game_details_cache:
-				game_details_cache[record["game_id"]] = fetch_scoreboard_scroll(session, record)
-			if record.get("game_id") and record["game_id"] in game_details_cache:
-				details = game_details_cache[record["game_id"]]
-				for key in SCOREBOARD_DETAIL_KEYS:
-					if has_value(details.get(key)):
-						record[key] = details[key]
+				dedupe_key = record["game_id"] or f"{record['game_date_key']}|{record['game_start_time']}|{record['away_team']}|{record['home_team']}"
+				if dedupe_key in seen_ids:
+					continue
+				seen_ids.add(dedupe_key)
+				records.append(record)
+	finally:
+		session.close()
 
-			dedupe_key = record["game_id"] or f"{record['game_date_key']}|{record['game_start_time']}|{record['away_team']}|{record['home_team']}"
-			if dedupe_key in seen_ids:
-				continue
-			seen_ids.add(dedupe_key)
-			records.append(record)
+	print(
+		f"Crawl {year}: {len(game_list_cache)} game-list dates, "
+		f"{len(fetched_game_ids)} fetched and {len(reused_game_ids)} reused final scoreboards."
+	)
 
 	return records
 
