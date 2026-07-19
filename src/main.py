@@ -310,9 +310,12 @@ def read_cached_scoreboard_details(path: Path, years: list[int]) -> dict[int, di
 	result: dict[int, dict[str, dict]] = {}
 	available_detail_keys = [key for key in SCOREBOARD_DETAIL_KEYS if key in cached.columns]
 	for row in cached.to_dict(orient="records"):
-		game_id = str(row.get("game_id") or "").strip()
+		game_id_value = row.get("game_id")
 		season_year = row.get("season_year")
-		if not game_id or pd.isna(season_year):
+		if pd.isna(game_id_value) or pd.isna(season_year):
+			continue
+		game_id = str(game_id_value).strip()
+		if not game_id:
 			continue
 		year = int(season_year)
 		result.setdefault(year, {})[game_id] = {key: row.get(key) for key in available_detail_keys}

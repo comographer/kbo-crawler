@@ -5,7 +5,7 @@ from typing import Any
 
 import pandas as pd
 
-from excel_output import write_with_permission_fallback
+from excel_output import excel_frame_matches, write_with_permission_fallback
 
 
 TEAM_COLUMNS = [
@@ -245,10 +245,21 @@ def build_team_sheet_rows(schedule_frame: pd.DataFrame) -> pd.DataFrame:
 
 
 def write_team_workbook(team_frame: pd.DataFrame, workbook_path: Path) -> Path:
+	team_names = [str(team_name)[:31] for team_name in sorted(team_frame["team"].dropna().unique())]
+	expected_sheet_names = ["Total", *team_names]
+	if excel_frame_matches(
+		workbook_path,
+		team_frame,
+		sheet_name="Total",
+		expected_sheet_names=expected_sheet_names,
+	):
+		print(f"Team workbook unchanged: {workbook_path}")
+		return workbook_path
+
 	def write(path: Path) -> None:
 		with pd.ExcelWriter(path, engine="openpyxl") as writer:
 			team_frame.to_excel(writer, sheet_name="Total", index=False)
-			for team_name in sorted(team_frame["team"].dropna().unique()):
-				team_frame[team_frame["team"] == team_name].to_excel(writer, sheet_name=str(team_name)[:31], index=False)
+			for team_name, sheet_name in zip(sorted(team_frame["team"].dropna().unique()), team_names):
+				team_frame[team_frame["team"] == team_name].to_excel(writer, sheet_name=sheet_name, index=False)
 
 	return write_with_permission_fallback(workbook_path, write)

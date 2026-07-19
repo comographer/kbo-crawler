@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from excel_output import write_with_permission_fallback
+from excel_output import excel_frame_matches, write_with_permission_fallback
 
 
 BASE_URL = "https://www.koreabaseball.com"
@@ -522,11 +522,6 @@ def parse_months(value: str) -> list[int]:
 	return month_list or list(range(1, 13))
 
 
-def should_fetch_game_list(record: dict[str, Any], today_key: str) -> bool:
-	date_key = str(record.get("game_date_key") or "")
-	return record.get("game_status") == "final" or bool(date_key and date_key <= today_key)
-
-
 def crawl_season(
 	year: int,
 	months: list[int],
@@ -543,7 +538,6 @@ def crawl_season(
 	reused_game_ids: set[str] = set()
 	fetched_game_ids: set[str] = set()
 	paths = output_paths(year)
-	today_key = date.today().strftime("%Y%m%d")
 	try:
 		for month in months:
 			payload = fetch_schedule_month(
@@ -560,7 +554,7 @@ def crawl_season(
 				date_key = record["game_date_key"]
 				game_id = str(record.get("game_id") or "")
 				has_reusable_details = record.get("game_status") == "final" and game_id in game_details_cache
-				if should_fetch_game_list(record, today_key) and not has_reusable_details:
+				if not has_reusable_details:
 					if date_key not in game_list_cache:
 						game_list_cache[date_key] = fetch_game_list(session, date_key)
 					if date_key not in used_game_ids_by_date:
@@ -692,4 +686,7 @@ def build_schedule_dataframe(records: list[dict[str, Any]]) -> pd.DataFrame:
 
 
 def write_schedule_workbook(frame: pd.DataFrame, workbook_path: Path) -> Path:
+	if excel_frame_matches(workbook_path, frame):
+		print(f"Schedule workbook unchanged: {workbook_path}")
+		return workbook_path
 	return write_with_permission_fallback(workbook_path, lambda path: frame.to_excel(path, index=False))
