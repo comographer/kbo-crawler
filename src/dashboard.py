@@ -38,6 +38,15 @@ TEAM_PATH = first_existing_path(
 	ROOT / "data" / "output" / "kbo_team_sheets_2026.xlsx",
 )
 FINAL_RESULTS = {"W", "L", "D"}
+KBO_SEASON_GAMES = 144
+POSTSEASON_TARGETS = {
+	1: ("한국시리즈 직행", "korean-series"),
+	2: ("플레이오프 직행", "playoff"),
+	3: ("준플레이오프 직행", "semi-playoff"),
+	4: ("와일드카드전", "wild-card"),
+	5: ("와일드카드전", "wild-card"),
+}
+RANK_TARGETS = tuple(range(1, 11))
 RESULT_COLORS = {
 	"W": "#3D7A5F",
 	"L": "#B85C5C",
@@ -660,6 +669,130 @@ def sidebar_filter_css(team_options: list[str]) -> str:
 		+ team_pill_color_rules('section[data-testid="stSidebar"] .st-key-filter_teams', team_options)
 		+ "\n\t</style>"
 	)
+
+
+def magic_number_css() -> str:
+	if ACTIVE_DARK_MODE:
+		colors = {
+			"surface": "#11181C",
+			"surface_alt": "#151F24",
+			"border": "#2E3D45",
+			"muted": "#9FB0B9",
+			"text": "#E8EEF1",
+			"magic_bg": "rgba(77, 166, 104, 0.14)",
+			"magic": "#80C991",
+			"tragic_bg": "rgba(184, 92, 92, 0.14)",
+			"tragic": "#E09898",
+		}
+	else:
+		colors = {
+			"surface": "#FFFFFF",
+			"surface_alt": "#F7F9FA",
+			"border": "#D9E0E4",
+			"muted": "#65747C",
+			"text": "#263238",
+			"magic_bg": "#EAF5ED",
+			"magic": "#2E7D47",
+			"tragic_bg": "#F8EAEA",
+			"tragic": "#A84444",
+		}
+	return f"""
+	<style>
+	.magic-number-note {{
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+		margin: 0.2rem 0 0.8rem;
+		color: {colors['muted']};
+		font-size: 0.8rem;
+	}}
+	.magic-number-note .legend-mark {{font-weight: 800;}}
+	.magic-number-note .legend-magic {{color: {colors['magic']};}}
+	.magic-number-note .legend-tragic {{color: {colors['tragic']};}}
+	.magic-table-wrap {{
+		width: 100%;
+		overflow-x: auto;
+		border: 1px solid {colors['border']};
+		border-radius: 6px;
+		background: {colors['surface']};
+	}}
+	.magic-table {{
+		width: 100%;
+		min-width: 1275px;
+		border-collapse: collapse;
+		table-layout: fixed;
+		font-size: 0.82rem;
+	}}
+	.magic-table th {{
+		padding: 0.68rem 0.24rem 0.58rem;
+		border-bottom: 1px solid {colors['border']};
+		background: {colors['surface_alt']};
+		color: {colors['text']};
+		text-align: center;
+		vertical-align: bottom;
+	}}
+	.magic-table th .target-rank {{display: block; font-size: 0.92rem; font-weight: 800;}}
+	.magic-table th .target-path {{display: block; margin-top: 0.18rem; color: {colors['muted']}; font-size: 0.64rem; font-weight: 600;}}
+	.magic-table th.target-korean-series {{border-top: 3px solid #D6A63A;}}
+	.magic-table th.target-playoff {{border-top: 3px solid #4C8CCB;}}
+	.magic-table th.target-semi-playoff {{border-top: 3px solid #54A66A;}}
+	.magic-table th.target-wild-card {{border-top: 3px solid #C77A42;}}
+	.magic-table th.target-regular {{border-top: 3px solid {colors['border']};}}
+	.magic-table td {{
+		padding: 0.54rem 0.24rem;
+		border-bottom: 1px solid {colors['border']};
+		color: {colors['text']};
+		text-align: center;
+		vertical-align: middle;
+	}}
+	.magic-table tbody tr:last-child td {{border-bottom: 0;}}
+	.magic-table tbody tr:nth-child(even) td {{background: {colors['surface_alt']};}}
+	.magic-table .col-current {{width: 6.8rem; text-align: left;}}
+	.magic-table .col-team {{width: 4.2rem; text-align: left;}}
+	.magic-table .col-record {{width: 4.4rem;}}
+	.magic-table .col-remaining {{width: 3.2rem;}}
+	.magic-table .col-target {{width: 6.1rem;}}
+	.magic-table th.col-current,
+	.magic-table td.col-current {{position: sticky; left: 0;}}
+	.magic-table th.col-team,
+	.magic-table td.col-team {{position: sticky; left: 6.8rem;}}
+	.magic-table th.col-current,
+	.magic-table th.col-team {{z-index: 4; background: {colors['surface_alt']};}}
+	.magic-table td.col-current,
+	.magic-table td.col-team {{z-index: 2; background: {colors['surface']};}}
+	.magic-table tbody tr:nth-child(even) td.col-current,
+	.magic-table tbody tr:nth-child(even) td.col-team {{background: {colors['surface_alt']};}}
+	.magic-table th.col-team,
+	.magic-table td.col-team {{box-shadow: 1px 0 0 {colors['border']};}}
+	.seed-line {{display: flex; align-items: center; gap: 0.32rem; min-height: 1.8rem;}}
+	.seed-badge {{
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 2.45rem;
+		height: 1.55rem;
+		border: 1px solid {colors['border']};
+		border-radius: 4px;
+		font-weight: 800;
+	}}
+	.seed-korean-series {{border-color: #D6A63A; color: #E1B852;}}
+	.seed-playoff {{border-color: #4C8CCB; color: #75ACE0;}}
+	.seed-semi-playoff {{border-color: #54A66A; color: #7BC98E;}}
+	.seed-wild-card {{border-color: #C77A42; color: #DE9A67;}}
+	.seed-outside {{color: {colors['muted']};}}
+	.seed-path {{color: {colors['muted']}; font-size: 0.64rem; line-height: 1.12;}}
+	.number-cell {{
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 2rem;
+		border-radius: 5px;
+	}}
+	.number-cell.magic {{background: {colors['magic_bg']}; color: {colors['magic']};}}
+	.number-cell.tragic {{background: {colors['tragic_bg']}; color: {colors['tragic']};}}
+	.number-value {{font-size: 1rem; font-weight: 800; line-height: 1.05;}}
+	</style>
+	"""
 
 
 def team_selector_css(team_options: list[str]) -> str:
@@ -1764,6 +1897,194 @@ def build_standings(team_frame: pd.DataFrame) -> pd.DataFrame:
 	return standings
 
 
+def standing_value(row: pd.Series, column: str) -> int:
+	value = row.get(column, 0)
+	return 0 if pd.isna(value) else int(value)
+
+
+def pairwise_magic_number(
+	team_row: pd.Series,
+	boundary_row: pd.Series,
+	season_games: int = KBO_SEASON_GAMES,
+) -> int | None:
+	team_remaining = max(0, season_games - standing_value(team_row, "games"))
+	boundary_remaining = max(0, season_games - standing_value(boundary_row, "games"))
+	team_decisions = season_games - standing_value(team_row, "draws")
+	boundary_decisions = season_games - standing_value(boundary_row, "draws")
+	team_wins = standing_value(team_row, "wins")
+	boundary_wins = standing_value(boundary_row, "wins")
+
+	for combined_results in range(team_remaining + boundary_remaining + 1):
+		minimum_team_wins = max(0, combined_results - boundary_remaining)
+		maximum_team_wins = min(team_remaining, combined_results)
+		clinched_for_every_split = all(
+			(team_wins + own_wins) * boundary_decisions
+			> (boundary_wins + boundary_remaining - (combined_results - own_wins)) * team_decisions
+			for own_wins in range(minimum_team_wins, maximum_team_wins + 1)
+		)
+		if clinched_for_every_split:
+			return combined_results
+	return None
+
+
+def pairwise_tragic_number(
+	team_row: pd.Series,
+	boundary_row: pd.Series,
+	season_games: int = KBO_SEASON_GAMES,
+) -> int | None:
+	team_remaining = max(0, season_games - standing_value(team_row, "games"))
+	boundary_remaining = max(0, season_games - standing_value(boundary_row, "games"))
+	team_decisions = season_games - standing_value(team_row, "draws")
+	boundary_decisions = season_games - standing_value(boundary_row, "draws")
+	team_wins = standing_value(team_row, "wins")
+	boundary_wins = standing_value(boundary_row, "wins")
+
+	for combined_results in range(team_remaining + boundary_remaining + 1):
+		minimum_team_losses = max(0, combined_results - boundary_remaining)
+		maximum_team_losses = min(team_remaining, combined_results)
+		eliminated_for_every_split = all(
+			(boundary_wins + (combined_results - own_losses)) * team_decisions
+			> (team_wins + team_remaining - own_losses) * boundary_decisions
+			for own_losses in range(minimum_team_losses, maximum_team_losses + 1)
+		)
+		if eliminated_for_every_split:
+			return combined_results
+	return None
+
+
+def build_magic_number_table(
+	team_frame: pd.DataFrame,
+	season_games: int = KBO_SEASON_GAMES,
+) -> pd.DataFrame:
+	standings = build_standings(team_frame).reset_index(drop=True)
+	if standings.empty:
+		return standings
+
+	standings.insert(0, "rank", range(1, len(standings) + 1))
+	standings["remaining"] = (season_games - standings["games"]).clip(lower=0)
+	for target_rank in RANK_TARGETS:
+		kinds: list[str] = []
+		numbers: list[int | None] = []
+		for index, row in standings.iterrows():
+			current_rank = index + 1
+			if current_rank <= target_rank:
+				boundary_index = target_rank
+				kind = "magic"
+				calculator = pairwise_magic_number
+			else:
+				boundary_index = target_rank - 1
+				kind = "tragic"
+				calculator = pairwise_tragic_number
+
+			if boundary_index >= len(standings):
+				number = 0 if kind == "magic" else None
+			else:
+				boundary = standings.iloc[boundary_index]
+				number = calculator(row, boundary, season_games)
+			kinds.append(kind)
+			numbers.append(number)
+
+		standings[f"target_{target_rank}_kind"] = kinds
+		standings[f"target_{target_rank}_number"] = numbers
+	return standings
+
+
+def magic_number_cell_html(row: pd.Series, target_rank: int) -> str:
+	kind = str(row.get(f"target_{target_rank}_kind") or "magic")
+	number = row.get(f"target_{target_rank}_number")
+	team = str(row.get("team") or "-")
+	if pd.isna(number):
+		value = "-"
+	else:
+		value = str(int(number))
+	meaning = "매직넘버" if kind == "magic" else "트래직넘버"
+	title = f"{team} {target_rank}위 {meaning}"
+	return (
+		f'<div class="number-cell {html.escape(kind)}" title="{html.escape(title)}">'
+		f'<span class="number-value">{html.escape(value)}</span></div>'
+	)
+
+
+def render_magic_number_table(magic_table: pd.DataFrame) -> None:
+	headers = [
+		'<th class="col-current">현재</th>',
+		'<th class="col-team">팀</th>',
+		'<th class="col-record">전적</th>',
+		'<th class="col-remaining">잔여</th>',
+	]
+	for target_rank in RANK_TARGETS:
+		path_label, class_name = POSTSEASON_TARGETS.get(target_rank, ("", "regular"))
+		path_html = f'<span class="target-path">{html.escape(path_label)}</span>' if path_label else ""
+		headers.append(
+			f'<th class="col-target target-{html.escape(class_name)}">'
+			f'<span class="target-rank">{target_rank}위</span>'
+			f'{path_html}</th>'
+		)
+
+	rows = []
+	for _, row in magic_table.iterrows():
+		rank = standing_value(row, "rank")
+		team = str(row.get("team") or "-")
+		if rank in POSTSEASON_TARGETS:
+			path_label, class_name = POSTSEASON_TARGETS[rank]
+			current_rank_html = (
+				f'<div class="seed-line"><span class="seed-badge seed-{html.escape(class_name)}">{rank}위</span>'
+				f'<span class="seed-path">{html.escape(path_label)}</span></div>'
+			)
+		else:
+			current_rank_html = f'<div class="seed-line"><span class="seed-badge seed-outside">{rank}위</span></div>'
+		cells = [
+			f'<td class="col-current">{current_rank_html}</td>',
+			f'<td class="col-team">{team_chip_html(team)}</td>',
+			f'<td class="col-record">{standing_value(row, "wins")}-{standing_value(row, "losses")}-{standing_value(row, "draws")}</td>',
+			f'<td class="col-remaining">{standing_value(row, "remaining")}</td>',
+			*(
+				f'<td class="col-target">{magic_number_cell_html(row, target_rank)}</td>'
+				for target_rank in RANK_TARGETS
+			),
+		]
+		rows.append(f"<tr>{''.join(cells)}</tr>")
+
+	st.markdown(
+		f'<div class="magic-table-wrap"><table class="magic-table"><thead><tr>{"".join(headers)}</tr></thead>'
+		f'<tbody>{"".join(rows)}</tbody></table></div>',
+		unsafe_allow_html=True,
+	)
+
+
+def render_magic_numbers(team: pd.DataFrame) -> None:
+	if "season_year" not in team.columns:
+		st.info("매직넘버를 계산할 시즌 데이터가 없습니다.")
+		return
+	season_years = pd.to_numeric(team["season_year"], errors="coerce").dropna()
+	if season_years.empty:
+		st.info("매직넘버를 계산할 시즌 데이터가 없습니다.")
+		return
+	latest_year = int(season_years.max())
+	latest_team = team[pd.to_numeric(team["season_year"], errors="coerce").eq(latest_year)].copy()
+	magic_table = build_magic_number_table(latest_team)
+	if magic_table.empty:
+		st.info("매직넘버를 계산할 종료 경기 데이터가 없습니다.")
+		return
+
+	st.markdown(magic_number_css(), unsafe_allow_html=True)
+	completed_games = int(magic_table["games"].sum() / 2)
+	metric_cols = st.columns(4)
+	metric_cols[0].metric("기준 시즌", str(latest_year))
+	metric_cols[1].metric("종료 경기", f"{completed_games} / {KBO_SEASON_GAMES * 5}")
+	metric_cols[2].metric("잔여 경기", format_int(KBO_SEASON_GAMES * 5 - completed_games))
+	with metric_cols[3]:
+		render_league_leader_metric(magic_table.iloc[0])
+
+	st.markdown(
+		'<div class="magic-number-note"><span class="legend-mark legend-magic">매직넘버</span>'
+		'<span>·</span><span class="legend-mark legend-tragic">트래직넘버</span>'
+		'<span>· 향후 무승부 및 동률 결정 제외</span></div>',
+		unsafe_allow_html=True,
+	)
+	render_magic_number_table(magic_table)
+
+
 def display_standings_table(standings: pd.DataFrame) -> None:
 	if standings.empty:
 		st.info("선택한 조건에 완료 경기 데이터가 없습니다.")
@@ -2433,21 +2754,22 @@ def main() -> None:
 
 	if filtered_schedule.empty and filtered_team.empty:
 		st.warning("선택한 조건에 데이터가 없습니다.")
-		return
 
 	st.caption(
 		f"종료 경기 기준 · Schedule {len(filtered_schedule):,} games · Team rows {len(filtered_team):,} · "
 		f"{SCHEDULE_PATH.name} / {TEAM_PATH.name}"
 	)
 
-	overview_tab, team_tab, matchup_tab, flow_tab, attendance_tab, games_tab = st.tabs(
-		["리그", "팀", "상대전적", "흐름", "관중/구장", "경기"]
+	overview_tab, team_tab, magic_tab, matchup_tab, flow_tab, attendance_tab, games_tab = st.tabs(
+		["리그", "팀", "매직넘버", "상대전적", "흐름", "관중/구장", "경기"]
 	)
 
 	with overview_tab:
 		render_overview(filtered_schedule, filtered_team)
 	with team_tab:
 		render_team_detail(filtered_team, rank_order)
+	with magic_tab:
+		render_magic_numbers(team)
 	with matchup_tab:
 		render_matchups(filtered_team, rank_order)
 	with flow_tab:
