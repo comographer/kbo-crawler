@@ -43,27 +43,15 @@ POSTSEASON_TARGETS = {
 	1: ("한국시리즈 직행", "korean-series"),
 	2: ("플레이오프 직행", "playoff"),
 	3: ("준플레이오프 직행", "semi-playoff"),
-	4: ("와일드카드전", "wild-card"),
-	5: ("와일드카드전", "wild-card"),
+	4: ("와일드카드결정전", "wild-card"),
+	5: ("와일드카드결정전", "wild-card"),
 }
-RANK_TARGETS = tuple(range(1, 11))
+RANK_TARGETS = tuple(range(1, 10))
 RESULT_COLORS = {
 	"W": "#3D7A5F",
 	"L": "#B85C5C",
 	"D": "#7A7F87",
 	"Cancel": "#A97846",
-}
-HEATMAP_CLASS_COLORS = {
-	"light": {
-		"negative": "#E7AAAA",
-		"neutral": "#D8DEE2",
-		"positive": "#A9DDB6",
-	},
-	"dark": {
-		"negative": "#7C3A3A",
-		"neutral": "#4A565D",
-		"positive": "#345F3E",
-	},
 }
 TEAM_COLORS = {
 	"KIA": "#EA0029",
@@ -683,6 +671,10 @@ def magic_number_css() -> str:
 			"magic": "#80C991",
 			"tragic_bg": "rgba(184, 92, 92, 0.14)",
 			"tragic": "#E09898",
+			"secured_bg": "#274A72",
+			"secured": "#C6DCF5",
+			"unavailable_bg": "#5B282B",
+			"unavailable": "#F0C2C4",
 		}
 	else:
 		colors = {
@@ -695,20 +687,28 @@ def magic_number_css() -> str:
 			"magic": "#2E7D47",
 			"tragic_bg": "#F8EAEA",
 			"tragic": "#A84444",
+			"secured_bg": "#D8E8F8",
+			"secured": "#245B91",
+			"unavailable_bg": "#E7C2C4",
+			"unavailable": "#842F34",
 		}
 	return f"""
 	<style>
 	.magic-number-note {{
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
 		gap: 0.55rem;
 		margin: 0.2rem 0 0.8rem;
 		color: {colors['muted']};
 		font-size: 0.8rem;
 	}}
+	.magic-number-note > span {{flex: 0 0 auto; white-space: nowrap;}}
 	.magic-number-note .legend-mark {{font-weight: 800;}}
 	.magic-number-note .legend-magic {{color: {colors['magic']};}}
 	.magic-number-note .legend-tragic {{color: {colors['tragic']};}}
+	.magic-number-note .legend-secured {{color: {colors['secured']};}}
+	.magic-number-note .legend-unavailable {{color: {colors['unavailable']};}}
 	.magic-table-wrap {{
 		width: 100%;
 		overflow-x: auto;
@@ -718,7 +718,7 @@ def magic_number_css() -> str:
 	}}
 	.magic-table {{
 		width: 100%;
-		min-width: 1275px;
+		min-width: 1120px;
 		border-collapse: collapse;
 		table-layout: fixed;
 		font-size: 0.82rem;
@@ -732,7 +732,7 @@ def magic_number_css() -> str:
 		vertical-align: bottom;
 	}}
 	.magic-table th .target-rank {{display: block; font-size: 0.92rem; font-weight: 800;}}
-	.magic-table th .target-path {{display: block; margin-top: 0.18rem; color: {colors['muted']}; font-size: 0.64rem; font-weight: 600;}}
+	.magic-table th .target-path {{display: block; margin-top: 0.18rem; color: {colors['muted']}; font-size: 0.6rem; font-weight: 600; white-space: nowrap;}}
 	.magic-table th.target-korean-series {{border-top: 3px solid #D6A63A;}}
 	.magic-table th.target-playoff {{border-top: 3px solid #4C8CCB;}}
 	.magic-table th.target-semi-playoff {{border-top: 3px solid #54A66A;}}
@@ -747,7 +747,7 @@ def magic_number_css() -> str:
 	}}
 	.magic-table tbody tr:last-child td {{border-bottom: 0;}}
 	.magic-table tbody tr:nth-child(even) td {{background: {colors['surface_alt']};}}
-	.magic-table .col-current {{width: 6.8rem; text-align: left;}}
+	.magic-table .col-current {{width: 3.4rem; text-align: center;}}
 	.magic-table .col-team {{width: 4.2rem; text-align: left;}}
 	.magic-table .col-record {{width: 4.4rem;}}
 	.magic-table .col-remaining {{width: 3.2rem;}}
@@ -755,7 +755,7 @@ def magic_number_css() -> str:
 	.magic-table th.col-current,
 	.magic-table td.col-current {{position: sticky; left: 0;}}
 	.magic-table th.col-team,
-	.magic-table td.col-team {{position: sticky; left: 6.8rem;}}
+	.magic-table td.col-team {{position: sticky; left: 3.4rem;}}
 	.magic-table th.col-current,
 	.magic-table th.col-team {{z-index: 4; background: {colors['surface_alt']};}}
 	.magic-table td.col-current,
@@ -764,7 +764,7 @@ def magic_number_css() -> str:
 	.magic-table tbody tr:nth-child(even) td.col-team {{background: {colors['surface_alt']};}}
 	.magic-table th.col-team,
 	.magic-table td.col-team {{box-shadow: 1px 0 0 {colors['border']};}}
-	.seed-line {{display: flex; align-items: center; gap: 0.32rem; min-height: 1.8rem;}}
+	.seed-line {{display: flex; align-items: center; justify-content: center; min-height: 1.8rem;}}
 	.seed-badge {{
 		display: inline-flex;
 		align-items: center;
@@ -780,7 +780,6 @@ def magic_number_css() -> str:
 	.seed-semi-playoff {{border-color: #54A66A; color: #7BC98E;}}
 	.seed-wild-card {{border-color: #C77A42; color: #DE9A67;}}
 	.seed-outside {{color: {colors['muted']};}}
-	.seed-path {{color: {colors['muted']}; font-size: 0.64rem; line-height: 1.12;}}
 	.number-cell {{
 		display: flex;
 		align-items: center;
@@ -791,6 +790,143 @@ def magic_number_css() -> str:
 	.number-cell.magic {{background: {colors['magic_bg']}; color: {colors['magic']};}}
 	.number-cell.tragic {{background: {colors['tragic_bg']}; color: {colors['tragic']};}}
 	.number-value {{font-size: 1rem; font-weight: 800; line-height: 1.05;}}
+	.magic-status-cell {{padding: 0.54rem 0.34rem !important;}}
+	.magic-status {{
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 2rem;
+		border-radius: 5px;
+		font-size: 0.9rem;
+		font-weight: 800;
+		white-space: nowrap;
+	}}
+	.magic-status.secured {{background: {colors['secured_bg']}; color: {colors['secured']};}}
+	.magic-status.unavailable {{background: {colors['unavailable_bg']}; color: {colors['unavailable']};}}
+	</style>
+	"""
+
+
+def matchup_matrix_css() -> str:
+	if ACTIVE_DARK_MODE:
+		colors = {
+			"surface": "#11181C",
+			"surface_alt": "#151F24",
+			"border": "#2E3D45",
+			"text": "#E8EEF1",
+			"muted": "#A3B1B8",
+			"deep_red_bg": "#47191D",
+			"deep_red": "#F1A3A8",
+			"red_bg": "#54272A",
+			"red": "#EDB5B8",
+			"neutral_bg": "#29343A",
+			"neutral": "#D1DADF",
+			"green_bg": "#203D2C",
+			"green": "#A2D8B1",
+			"deep_green_bg": "#123321",
+			"deep_green": "#7ED19A",
+		}
+	else:
+		colors = {
+			"surface": "#FFFFFF",
+			"surface_alt": "#F7F9FA",
+			"border": "#D9E0E4",
+			"text": "#263238",
+			"muted": "#65747C",
+			"deep_red_bg": "#E4B5B8",
+			"deep_red": "#6F1F25",
+			"red_bg": "#F3D7D9",
+			"red": "#8F333A",
+			"neutral_bg": "#E8ECEE",
+			"neutral": "#4E5D64",
+			"green_bg": "#D8EEDF",
+			"green": "#27673C",
+			"deep_green_bg": "#AFD6BA",
+			"deep_green": "#174C2B",
+		}
+	return f"""
+	<style>
+	.matchup-legend {{
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.45rem 0.8rem;
+		margin: 0.15rem 0 0.75rem;
+		color: {colors['muted']};
+		font-size: 0.76rem;
+	}}
+	.matchup-legend-item {{display: inline-flex; align-items: center; gap: 0.28rem; white-space: nowrap;}}
+	.matchup-legend-swatch {{width: 0.72rem; height: 0.72rem; border-radius: 2px; border: 1px solid {colors['border']};}}
+	.matchup-legend-swatch.rate-deep-red {{background: {colors['deep_red_bg']};}}
+	.matchup-legend-swatch.rate-red {{background: {colors['red_bg']};}}
+	.matchup-legend-swatch.rate-neutral {{background: {colors['neutral_bg']};}}
+	.matchup-legend-swatch.rate-green {{background: {colors['green_bg']};}}
+	.matchup-legend-swatch.rate-deep-green {{background: {colors['deep_green_bg']};}}
+	.matchup-table-wrap {{
+		width: 100%;
+		max-height: 720px;
+		overflow: auto;
+		border: 1px solid {colors['border']};
+		border-radius: 6px;
+		background: {colors['surface']};
+	}}
+	.matchup-table {{
+		width: 100%;
+		border-collapse: separate;
+		border-spacing: 0;
+		table-layout: fixed;
+		font-size: 0.76rem;
+	}}
+	.matchup-table th,
+	.matchup-table td {{
+		border-right: 1px solid {colors['border']};
+		border-bottom: 1px solid {colors['border']};
+		text-align: center;
+		vertical-align: middle;
+	}}
+	.matchup-table tr > :last-child {{border-right: 0;}}
+	.matchup-table tbody tr:last-child > * {{border-bottom: 0;}}
+	.matchup-table thead th {{
+		position: sticky;
+		top: 0;
+		z-index: 3;
+		height: 2.7rem;
+		padding: 0.35rem 0.28rem;
+		background: {colors['surface_alt']};
+		color: {colors['text']};
+		white-space: nowrap;
+	}}
+	.matchup-table .matchup-team-column {{
+		position: sticky;
+		left: 0;
+		z-index: 2;
+		width: 4.6rem;
+		padding: 0.45rem 0.36rem;
+		background: {colors['surface']};
+	}}
+	.matchup-table thead .matchup-team-column {{z-index: 5; background: {colors['surface_alt']};}}
+	.matchup-table tbody tr:nth-child(even) .matchup-team-column {{background: {colors['surface_alt']};}}
+	.matchup-table .matchup-opponent-column {{width: 8rem;}}
+	.matchup-table td {{height: 4.65rem; padding: 0.36rem 0.28rem; color: {colors['text']};}}
+	.matchup-table td.rate-deep-red {{background: {colors['deep_red_bg']}; color: {colors['deep_red']};}}
+	.matchup-table td.rate-red {{background: {colors['red_bg']}; color: {colors['red']};}}
+	.matchup-table td.rate-neutral {{background: {colors['neutral_bg']}; color: {colors['neutral']};}}
+	.matchup-table td.rate-green {{background: {colors['green_bg']}; color: {colors['green']};}}
+	.matchup-table td.rate-deep-green {{background: {colors['deep_green_bg']}; color: {colors['deep_green']};}}
+	.matchup-table td.rate-empty,
+	.matchup-table td.matchup-diagonal {{background: {colors['surface_alt']}; color: {colors['muted']};}}
+	.matchup-record {{display: flex; flex-direction: column; align-items: center; gap: 0.16rem; line-height: 1.15;}}
+	.matchup-record-line {{white-space: nowrap;}}
+	.matchup-record-line.overall {{font-size: 0.79rem; font-weight: 800;}}
+	.matchup-record-line.split {{color: inherit; opacity: 0.9;}}
+	.matchup-scope {{display: inline-block; min-width: 1.42rem; margin-right: 0.13rem; font-weight: 700;}}
+	.matchup-diagonal-mark {{font-size: 1rem; font-weight: 800;}}
+	.matchup-table .team-chip {{justify-content: center; white-space: nowrap;}}
+	@media (max-width: 640px) {{
+		.matchup-table-wrap {{max-height: 640px;}}
+		.matchup-table {{font-size: 0.72rem;}}
+		.matchup-table .matchup-opponent-column {{width: 7.8rem;}}
+	}}
 	</style>
 	"""
 
@@ -1697,54 +1833,6 @@ def order_by_reference(values: list[str], reference: list[str]) -> list[str]:
 	return ordered
 
 
-def format_heatmap_value(value: Any, metric: str) -> str:
-	if pd.isna(value):
-		return ""
-	if metric == "승률":
-		return f"{float(value):.3f}"
-	if metric in {"득실차", "경기 수"}:
-		return f"{int(value):,}"
-	return f"{float(value):.1f}"
-
-
-def classified_heatmap(value_frame: pd.DataFrame, metric: str, threshold: float, height: int) -> go.Figure:
-	colors = HEATMAP_CLASS_COLORS["dark" if ACTIVE_DARK_MODE else "light"]
-	class_frame = pd.DataFrame(0.0, index=value_frame.index, columns=value_frame.columns)
-	class_frame[value_frame > threshold] = 1
-	class_frame[value_frame < threshold] = -1
-	class_frame[value_frame.isna()] = float("nan")
-	text_frame = value_frame.apply(lambda column: column.map(lambda value: format_heatmap_value(value, metric)))
-	colorscale = [
-		[0.0, colors["negative"]],
-		[0.499, colors["negative"]],
-		[0.5, colors["neutral"]],
-		[0.501, colors["positive"]],
-		[1.0, colors["positive"]],
-	]
-	fig = go.Figure(
-		data=go.Heatmap(
-			z=class_frame,
-			x=value_frame.columns,
-			y=value_frame.index,
-			text=text_frame,
-			customdata=text_frame,
-			texttemplate="%{text}",
-			hovertemplate="<b>%{y} vs %{x}</b><br>" + metric + ": %{customdata}<extra></extra>",
-			colorscale=colorscale,
-			zmin=-1,
-			zmax=1,
-			showscale=False,
-			xgap=1,
-			ygap=1,
-		)
-	)
-	fig.update_traces(textfont_color="#F8FAFB" if ACTIVE_DARK_MODE else "#263238")
-	fig = apply_layout(fig, height=height)
-	fig.update_xaxes(title_text="")
-	fig.update_yaxes(title_text="", autorange="reversed")
-	return fig
-
-
 def build_streaks(team_frame: pd.DataFrame) -> pd.DataFrame:
 	final_frame = team_frame[team_frame["result"].isin({"W", "L", "D"})].copy()
 	if final_frame.empty:
@@ -2005,6 +2093,45 @@ def magic_number_cell_html(row: pd.Series, target_rank: int) -> str:
 	)
 
 
+def magic_number_cells_html(row: pd.Series) -> list[str]:
+	cells: list[str] = []
+	index = 0
+	while index < len(RANK_TARGETS):
+		target_rank = RANK_TARGETS[index]
+		kind = str(row.get(f"target_{target_rank}_kind") or "magic")
+		number = row.get(f"target_{target_rank}_number")
+		status = None
+		if not pd.isna(number) and int(number) == 0:
+			status = "secured" if kind == "magic" else "unavailable"
+
+		if status is None:
+			cells.append(f'<td class="col-target">{magic_number_cell_html(row, target_rank)}</td>')
+			index += 1
+			continue
+
+		end = index + 1
+		while end < len(RANK_TARGETS):
+			next_rank = RANK_TARGETS[end]
+			next_kind = str(row.get(f"target_{next_rank}_kind") or "magic")
+			next_number = row.get(f"target_{next_rank}_number")
+			next_status = None
+			if not pd.isna(next_number) and int(next_number) == 0:
+				next_status = "secured" if next_kind == "magic" else "unavailable"
+			if next_status != status:
+				break
+			end += 1
+
+		merged_ranks = RANK_TARGETS[index:end]
+		label_rank = min(merged_ranks) if status == "secured" else max(merged_ranks)
+		label = f"{label_rank}위 {'확보' if status == 'secured' else '불가'}"
+		cells.append(
+			f'<td class="col-target magic-status-cell" colspan="{len(merged_ranks)}">'
+			f'<div class="magic-status {status}">{html.escape(label)}</div></td>'
+		)
+		index = end
+	return cells
+
+
 def render_magic_number_table(magic_table: pd.DataFrame) -> None:
 	headers = [
 		'<th class="col-current">현재</th>',
@@ -2026,11 +2153,8 @@ def render_magic_number_table(magic_table: pd.DataFrame) -> None:
 		rank = standing_value(row, "rank")
 		team = str(row.get("team") or "-")
 		if rank in POSTSEASON_TARGETS:
-			path_label, class_name = POSTSEASON_TARGETS[rank]
-			current_rank_html = (
-				f'<div class="seed-line"><span class="seed-badge seed-{html.escape(class_name)}">{rank}위</span>'
-				f'<span class="seed-path">{html.escape(path_label)}</span></div>'
-			)
+			_, class_name = POSTSEASON_TARGETS[rank]
+			current_rank_html = f'<div class="seed-line"><span class="seed-badge seed-{html.escape(class_name)}">{rank}위</span></div>'
 		else:
 			current_rank_html = f'<div class="seed-line"><span class="seed-badge seed-outside">{rank}위</span></div>'
 		cells = [
@@ -2038,10 +2162,7 @@ def render_magic_number_table(magic_table: pd.DataFrame) -> None:
 			f'<td class="col-team">{team_chip_html(team)}</td>',
 			f'<td class="col-record">{standing_value(row, "wins")}-{standing_value(row, "losses")}-{standing_value(row, "draws")}</td>',
 			f'<td class="col-remaining">{standing_value(row, "remaining")}</td>',
-			*(
-				f'<td class="col-target">{magic_number_cell_html(row, target_rank)}</td>'
-				for target_rank in RANK_TARGETS
-			),
+			*magic_number_cells_html(row),
 		]
 		rows.append(f"<tr>{''.join(cells)}</tr>")
 
@@ -2079,6 +2200,8 @@ def render_magic_numbers(team: pd.DataFrame) -> None:
 	st.markdown(
 		'<div class="magic-number-note"><span class="legend-mark legend-magic">매직넘버</span>'
 		'<span>·</span><span class="legend-mark legend-tragic">트래직넘버</span>'
+		'<span>·</span><span class="legend-mark legend-secured">확보</span>'
+		'<span>·</span><span class="legend-mark legend-unavailable">불가</span>'
 		'<span>· 향후 무승부 및 동률 결정 제외</span></div>',
 		unsafe_allow_html=True,
 	)
@@ -2368,62 +2491,132 @@ def render_team_detail(team: pd.DataFrame, rank_order: list[str]) -> None:
 	render_recent_games_table(recent)
 
 
+def aggregate_matchup_records(frame: pd.DataFrame, scope: str) -> pd.DataFrame:
+	grouped = (
+		frame.groupby(["team", "opponent"])
+		.agg(
+			**{
+				f"{scope}_games": ("game_id", "count"),
+				f"{scope}_wins": ("win_flag", "sum"),
+				f"{scope}_losses": ("loss_flag", "sum"),
+				f"{scope}_draws": ("draw_flag", "sum"),
+			}
+		)
+		.reset_index()
+	)
+	decisions = grouped[f"{scope}_wins"] + grouped[f"{scope}_losses"]
+	grouped[f"{scope}_win_pct"] = grouped[f"{scope}_wins"].div(decisions.where(decisions > 0))
+	return grouped
+
+
+def build_matchup_records(final_frame: pd.DataFrame) -> pd.DataFrame:
+	matchups = aggregate_matchup_records(final_frame, "overall")
+	for home_away, scope in (("home", "home"), ("away", "away")):
+		split = aggregate_matchup_records(final_frame[final_frame["home_away"] == home_away], scope)
+		matchups = matchups.merge(split, on=["team", "opponent"], how="left")
+
+	count_columns = [
+		f"{scope}_{metric}"
+		for scope in ("overall", "home", "away")
+		for metric in ("games", "wins", "losses", "draws")
+	]
+	matchups[count_columns] = matchups[count_columns].fillna(0).astype(int)
+	return matchups
+
+
+def matchup_rate_class(value: Any) -> str:
+	if pd.isna(value):
+		return "rate-empty"
+	win_pct = float(value)
+	if win_pct <= 0.25:
+		return "rate-deep-red"
+	if win_pct < 0.5:
+		return "rate-red"
+	if win_pct == 0.5:
+		return "rate-neutral"
+	if win_pct < 0.75:
+		return "rate-green"
+	return "rate-deep-green"
+
+
+def matchup_record_text(row: pd.Series, scope: str) -> str:
+	games = standing_value(row, f"{scope}_games")
+	if games == 0:
+		return "-"
+	return (
+		f"{standing_value(row, f'{scope}_wins')}-"
+		f"{standing_value(row, f'{scope}_losses')}-"
+		f"{standing_value(row, f'{scope}_draws')} "
+		f"({format_pct(row.get(f'{scope}_win_pct'))})"
+	)
+
+
+def matchup_record_cell_html(row: pd.Series) -> str:
+	rate_class = matchup_rate_class(row.get("overall_win_pct"))
+	return (
+		f'<td class="matchup-opponent-column {rate_class}"><div class="matchup-record">'
+		f'<div class="matchup-record-line overall" title="전체">{html.escape(matchup_record_text(row, "overall"))}</div>'
+		f'<div class="matchup-record-line split"><span class="matchup-scope" title="홈" aria-label="홈">🏠</span>{html.escape(matchup_record_text(row, "home"))}</div>'
+		f'<div class="matchup-record-line split"><span class="matchup-scope" title="원정" aria-label="원정">✈️</span>{html.escape(matchup_record_text(row, "away"))}</div>'
+		'</div></td>'
+	)
+
+
+def render_matchup_matrix(matchups: pd.DataFrame, rank_order: list[str]) -> None:
+	row_teams = matchups["team"].dropna().astype(str).unique().tolist()
+	opponent_teams = matchups["opponent"].dropna().astype(str).unique().tolist()
+	row_order = [team for team in rank_order if team in row_teams]
+	row_order += [team for team in row_teams if team not in row_order]
+	column_order = [team for team in rank_order if team in opponent_teams]
+	column_order += [team for team in opponent_teams if team not in column_order]
+	lookup = matchups.set_index(["team", "opponent"])
+
+	headers = ['<th class="matchup-team-column">팀 / 상대</th>']
+	headers.extend(
+		f'<th class="matchup-opponent-column">{team_chip_html(team)}</th>'
+		for team in column_order
+	)
+	rows: list[str] = []
+	for team in row_order:
+		cells = [f'<th class="matchup-team-column" scope="row">{team_chip_html(team)}</th>']
+		for opponent in column_order:
+			if team == opponent:
+				cells.append(
+					'<td class="matchup-opponent-column matchup-diagonal"><span class="matchup-diagonal-mark">■</span></td>'
+				)
+			elif (team, opponent) in lookup.index:
+				cells.append(matchup_record_cell_html(lookup.loc[(team, opponent)]))
+			else:
+				cells.append('<td class="matchup-opponent-column rate-empty">-</td>')
+		rows.append(f"<tr>{''.join(cells)}</tr>")
+
+	min_width = 74 + len(column_order) * 128
+	st.markdown(
+		f'<div class="matchup-table-wrap"><table class="matchup-table" style="min-width:{min_width}px">'
+		f'<thead><tr>{"".join(headers)}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>',
+		unsafe_allow_html=True,
+	)
+
+
 def render_matchups(team: pd.DataFrame, rank_order: list[str]) -> None:
 	final_frame = team[team["is_final"]].copy()
 	if final_frame.empty:
 		st.info("선택한 조건에 상대전적 데이터가 없습니다.")
 		return
 
-	matchups = (
-		final_frame.groupby(["team", "opponent"])
-		.agg(
-			games=("game_id", "count"),
-			wins=("win_flag", "sum"),
-			losses=("loss_flag", "sum"),
-			draws=("draw_flag", "sum"),
-			run_diff=("run_diff", "sum"),
-			avg_runs_for=("runs_for", "mean"),
-			avg_runs_against=("runs_against", "mean"),
-		)
-		.reset_index()
+	matchups = build_matchup_records(final_frame)
+	st.markdown(matchup_matrix_css(), unsafe_allow_html=True)
+	st.markdown(
+		'<div class="matchup-legend">'
+		'<span class="matchup-legend-item"><span class="matchup-legend-swatch rate-deep-red"></span>0.250 이하</span>'
+		'<span class="matchup-legend-item"><span class="matchup-legend-swatch rate-red"></span>0.500 미만</span>'
+		'<span class="matchup-legend-item"><span class="matchup-legend-swatch rate-neutral"></span>0.500</span>'
+		'<span class="matchup-legend-item"><span class="matchup-legend-swatch rate-green"></span>0.750 미만</span>'
+		'<span class="matchup-legend-item"><span class="matchup-legend-swatch rate-deep-green"></span>0.750 이상</span>'
+		'</div>',
+		unsafe_allow_html=True,
 	)
-	matchups["win_pct"] = matchups["wins"].div((matchups["wins"] + matchups["losses"]).where((matchups["wins"] + matchups["losses"]) > 0))
-	matchups["games_record"] = matchups.apply(
-		lambda row: f"{format_int(row['games'])}({format_int(row['wins'])}-{format_int(row['losses'])}-{format_int(row['draws'])})",
-		axis=1,
-	)
-
-	metric = st.selectbox("지표", ["승률", "득실차", "평균 득점", "경기 수"])
-	metric_map = {"승률": "win_pct", "득실차": "run_diff", "평균 득점": "avg_runs_for", "경기 수": "games"}
-	pivot = matchups.pivot(index="team", columns="opponent", values=metric_map[metric])
-	text_pivot = matchups.pivot(index="team", columns="opponent", values="games_record") if metric == "경기 수" else None
-	row_order = [team_name for team_name in rank_order if team_name in pivot.index]
-	row_order += [team_name for team_name in pivot.index if team_name not in row_order]
-	column_order = [team_name for team_name in rank_order if team_name in pivot.columns]
-	column_order += [team_name for team_name in pivot.columns if team_name not in column_order]
-	pivot = pivot.reindex(index=row_order, columns=column_order)
-	if text_pivot is not None:
-		text_pivot = text_pivot.reindex(index=row_order, columns=column_order).fillna("")
-	height = max(260, min(520, 150 + len(pivot.index) * 38))
-	if metric == "승률":
-		fig = classified_heatmap(pivot, metric, 0.5, height)
-	elif metric == "득실차":
-		fig = classified_heatmap(pivot, metric, 0, height)
-	else:
-		fig = px.imshow(
-			pivot,
-			text_auto=".2f" if metric == "평균 득점" else True,
-			aspect="auto",
-			color_continuous_scale=active_green_scale(),
-			labels=dict(x="상대", y="팀", color=metric),
-		)
-		fig.update_layout(coloraxis_showscale=False)
-		fig = apply_layout(fig, height=height)
-		fig.update_xaxes(title_text="")
-		fig.update_yaxes(title_text="", autorange="reversed")
-		if metric == "경기 수" and text_pivot is not None:
-			fig.update_traces(text=text_pivot.to_numpy(), texttemplate="%{text}")
-	st.plotly_chart(fig, width="stretch")
+	render_matchup_matrix(matchups, rank_order)
 
 
 def phase_run_diff_bar(summary: pd.DataFrame) -> go.Figure:
