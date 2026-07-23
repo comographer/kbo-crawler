@@ -1375,39 +1375,6 @@ def render_league_recent10_table(summary: pd.DataFrame) -> None:
 	)
 
 
-def render_flow_summary_table(summary: pd.DataFrame) -> None:
-	if summary.empty:
-		plot_empty("팀별 흐름 요약 데이터가 없습니다.")
-		return
-
-	headers = ["팀", "경기", "전반 득실차", "후반 득실차", "역전승", "역전패", "끝내기승", "끝내기패", "연장경기수", "최다연승", "최다연패"]
-	rows = []
-	for _, row in summary.iterrows():
-		first_diff = row.get("first_5_run_diff")
-		late_diff = row.get("after_5_run_diff")
-		cells = [
-			team_chip_html(row.get("team")),
-			html.escape(format_int(row.get("games"))),
-			f'<span class="{tone_class(first_diff, 0)}">{html.escape(format_int(first_diff))}</span>',
-			f'<span class="{tone_class(late_diff, 0)}">{html.escape(format_int(late_diff))}</span>',
-			html.escape(format_int(row.get("comeback_win"))),
-			html.escape(format_int(row.get("blown_loss"))),
-			html.escape(format_int(row.get("walkoff_win"))),
-			html.escape(format_int(row.get("walkoff_loss"))),
-			html.escape(format_int(row.get("extra_games"))),
-			html.escape(format_int(row.get("max_win_streak"))),
-			html.escape(format_int(row.get("max_loss_streak"))),
-		]
-		rows.append("<tr>" + "".join(f"<td>{cell}</td>" for cell in cells) + "</tr>")
-
-	header_html = "".join(f"<th>{html.escape(header)}</th>" for header in headers)
-	body_html = "".join(rows)
-	st.markdown(
-		f'<div class="kbo-table-wrap"><table class="kbo-table"><thead><tr>{header_html}</tr></thead><tbody>{body_html}</tbody></table></div>',
-		unsafe_allow_html=True,
-	)
-
-
 def build_team_extreme_games(team: pd.DataFrame, metric_column: str, ascending: bool) -> pd.DataFrame:
 	final_frame = team[team["is_final"]].dropna(subset=[metric_column]).copy()
 	if final_frame.empty:
@@ -2265,7 +2232,10 @@ def apply_layout(fig: go.Figure, height: int = 360) -> go.Figure:
 	return fig
 
 
-def filter_data(schedule: pd.DataFrame, team: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, list[str]]:
+def filter_data(
+	schedule: pd.DataFrame,
+	team: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, list[str], dict[str, list[str]]]:
 	schedule = schedule[schedule["game_status"] == "final"].copy()
 	team = team[team["is_final"]].copy()
 	year_options = sorted(schedule["season_year_label"].dropna().unique().tolist(), reverse=True)
@@ -2328,6 +2298,12 @@ def filter_data(schedule: pd.DataFrame, team: pd.DataFrame) -> tuple[pd.DataFram
 		schedule[attendance_schedule_mask].copy(),
 		team[attendance_team_mask].copy(),
 		rank_order,
+		{
+			"years": list(selected_years),
+			"months": list(selected_months),
+			"teams": list(selected_teams),
+			"home_away": list(selected_home_away),
+		},
 	)
 
 
@@ -2649,6 +2625,211 @@ def phase_run_diff_bar(summary: pd.DataFrame) -> go.Figure:
 	return apply_layout(fig)
 
 
+def latest_selected_season(team: pd.DataFrame, selected_years: list[str]) -> int | None:
+	if "season_year" not in team.columns:
+		return None
+	available = set(pd.to_numeric(team.get("season_year"), errors="coerce").dropna().astype(int).tolist())
+	selected: list[int] = []
+	for value in selected_years:
+		try:
+			selected.append(int(float(value)))
+		except (TypeError, ValueError):
+			continue
+	candidates = available.intersection(selected)
+	return max(candidates) if candidates else None
+
+
+def build_daily_rank_trend(team: pd.DataFrame, season_year: int) -> pd.DataFrame:
+	season = team[
+		(team["is_final"])
+		& pd.to_numeric(team["season_year"], errors="coerce").eq(season_year)
+	].dropna(subset=["game_date", "team"]).copy()
+	if season.empty:
+		return pd.DataFrame()
+
+	season["game_date"] = pd.to_datetime(season["game_date"], errors="coerce").dt.normalize()
+	season = season.dropna(subset=["game_date"])
+	daily = (
+		season.groupby(["game_date", "team"], dropna=False)
+		.agg(
+			wins=("win_flag", "sum"),
+			losses=("loss_flag", "sum"),
+			draws=("draw_flag", "sum"),
+			runs_for=("runs_for", "sum"),
+			runs_against=("runs_against", "sum"),
+		)
+	)
+	dates = sorted(season["game_date"].unique().tolist())
+	teams = sorted(season["team"].dropna().astype(str).unique().tolist())
+	full_index = pd.MultiIndex.from_product([dates, teams], names=["game_date", "team"])
+	daily = daily.reindex(full_index, fill_value=0).reset_index().sort_values(["team", "game_date"])
+	cumulative_columns = ["wins", "losses", "draws", "runs_for", "runs_against"]
+	daily[cumulative_columns] = daily.groupby("team", sort=False)[cumulative_columns].cumsum()
+	daily["run_diff"] = daily["runs_for"] - daily["runs_against"]
+	decisions = daily["wins"] + daily["losses"]
+	daily["win_pct"] = daily["wins"].div(decisions.where(decisions > 0))
+
+	ranked_dates: list[pd.DataFrame] = []
+	for _, snapshot in daily.groupby("game_date", sort=True):
+		ranked = snapshot.sort_values(
+			["win_pct", "wins", "run_diff", "team"],
+			ascending=[False, False, False, True],
+			na_position="last",
+		).copy()
+		ranked["rank"] = range(1, len(ranked) + 1)
+		ranked_dates.append(ranked)
+
+	trend = pd.concat(ranked_dates, ignore_index=True)
+	trend["record"] = trend.apply(
+		lambda row: f"{int(row['wins'])}-{int(row['losses'])}-{int(row['draws'])}",
+		axis=1,
+	)
+	return trend.sort_values(["game_date", "rank"]).reset_index(drop=True)
+
+
+def selected_month_numbers(selected_months: list[str]) -> list[int]:
+	months: set[int] = set()
+	for value in selected_months:
+		try:
+			month = int(float(value))
+		except (TypeError, ValueError):
+			continue
+		if 1 <= month <= 12:
+			months.add(month)
+	return sorted(months)
+
+
+def prepare_rank_trend_display(
+	trend: pd.DataFrame,
+	selected_months: list[str],
+	selected_teams: list[str],
+) -> pd.DataFrame:
+	if trend.empty:
+		return trend.copy()
+	months = selected_month_numbers(selected_months)
+	if not months:
+		return pd.DataFrame(columns=[*trend.columns, "plot_rank"])
+
+	selected_dates = trend.loc[trend["game_date"].dt.month.isin(months), "game_date"]
+	if selected_dates.empty:
+		return pd.DataFrame(columns=[*trend.columns, "plot_rank"])
+	start_date = selected_dates.min()
+	end_date = selected_dates.max()
+	display = trend[trend["game_date"].between(start_date, end_date)].copy()
+	if selected_teams:
+		season_teams = set(display["team"].astype(str))
+		team_selection = [team for team in selected_teams if team in season_teams]
+		display = display[display["team"].isin(team_selection)].copy()
+	display["plot_rank"] = display["rank"].where(display["game_date"].dt.month.isin(months))
+	return display
+
+
+def rank_trend_figure(display: pd.DataFrame, league_size: int) -> go.Figure:
+	visible = display.dropna(subset=["plot_rank"]).copy()
+	last_date = visible["game_date"].max()
+	last_snapshot = visible[visible["game_date"].eq(last_date)].sort_values("plot_rank")
+	team_order = last_snapshot["team"].astype(str).tolist()
+	fig = go.Figure()
+	for team in team_order:
+		team_frame = display[display["team"].eq(team)].sort_values("game_date").copy()
+		text = [""] * len(team_frame)
+		last_visible_positions = team_frame.index[team_frame["plot_rank"].notna()].tolist()
+		if last_visible_positions:
+			last_position = team_frame.index.get_loc(last_visible_positions[-1])
+			text[last_position] = team
+		fig.add_scatter(
+			x=team_frame["game_date"],
+			y=team_frame["plot_rank"],
+			mode="lines+markers+text",
+			name=team,
+			line=dict(color=team_color(team), width=2),
+			marker=dict(color=team_color(team), size=4),
+			text=text,
+			textposition="middle right",
+			customdata=team_frame[["record", "win_pct"]].to_numpy(),
+			cliponaxis=False,
+			hovertemplate=(
+				f"<b>{html.escape(team)}</b><br>%{{x|%Y-%m-%d}}<br>"
+				"%{y:.0f}위 · %{customdata[0]} · %{customdata[1]:.3f}<extra></extra>"
+			),
+			connectgaps=False,
+		)
+
+	start_date = visible["game_date"].min()
+	end_date = visible["game_date"].max()
+	height = max(470, min(640, 320 + league_size * 28))
+	fig = apply_layout(fig, height=height)
+	fig.update_layout(
+		showlegend=False,
+		hovermode="closest",
+		margin=dict(l=52, r=70, t=20, b=52),
+	)
+	fig.update_xaxes(
+		title_text="",
+		range=[start_date - pd.Timedelta(days=1), end_date + pd.Timedelta(days=5)],
+		tickmode="auto",
+		nticks=6,
+		tickformat="%m/%d",
+		tickangle=0,
+	)
+	fig.update_yaxes(
+		title_text="순위",
+		range=[league_size + 0.5, 0.5],
+		tickmode="array",
+		tickvals=list(range(1, league_size + 1)),
+		ticktext=[f"{rank}위" for rank in range(1, league_size + 1)],
+		dtick=1,
+	)
+	return fig
+
+
+def format_rank_date_range(start: pd.Timestamp, end: pd.Timestamp) -> str:
+	return f"{start:%Y.%m.%d} - {end:%m.%d}"
+
+
+def render_rank_trend(
+	full_team: pd.DataFrame,
+	filter_selections: dict[str, list[str]],
+) -> None:
+	st.subheader("순위 변동 추이")
+	season_year = latest_selected_season(full_team, filter_selections.get("years", []))
+	if season_year is None:
+		plot_empty("선택한 연도에 순위 데이터가 없습니다.")
+		return
+
+	trend = build_daily_rank_trend(full_team, season_year)
+	display = prepare_rank_trend_display(
+		trend,
+		filter_selections.get("months", []),
+		filter_selections.get("teams", []),
+	)
+	visible = display.dropna(subset=["plot_rank"]) if "plot_rank" in display.columns else pd.DataFrame()
+	if trend.empty or visible.empty:
+		plot_empty("선택한 월에 완료된 경기의 순위 데이터가 없습니다.")
+		return
+
+	season_start = trend["game_date"].min()
+	season_end = trend["game_date"].max()
+	display_start = visible["game_date"].min()
+	display_end = visible["game_date"].max()
+	display_teams = visible["team"].nunique()
+	league_size = trend["team"].nunique()
+	metric_cols = st.columns(4)
+	metric_cols[0].metric("기준 시즌", str(season_year))
+	metric_cols[1].metric("전체 시즌 데이터", format_rank_date_range(season_start, season_end))
+	metric_cols[2].metric("그래프 표시 기간", format_rank_date_range(display_start, display_end))
+	metric_cols[3].metric("표시 팀", f"{display_teams}팀")
+
+	months = selected_month_numbers(filter_selections.get("months", []))
+	month_text = " · ".join(f"{month:02d}월" for month in months)
+	year_note = " · 여러 연도 선택 시 최신 시즌" if len(filter_selections.get("years", [])) > 1 else ""
+	st.caption(
+		f"선택 월 {month_text}{year_note} · 순위는 시즌 개막일부터 해당 일자까지 리그 전체 경기 누적 기준"
+		" · 선택하지 않은 중간 월은 선을 끊어 표시"
+	)
+	st.plotly_chart(rank_trend_figure(display, league_size), width="stretch")
+
+
 FLOW_COLUMNS = [
 	"first_5_runs_for",
 	"first_5_runs_against",
@@ -2691,26 +2872,21 @@ def build_flow_summary(team: pd.DataFrame) -> pd.DataFrame:
 	return summary
 
 
-def render_flow_insights(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
+def render_flow_insights(
+	schedule: pd.DataFrame,
+	team: pd.DataFrame,
+	full_team: pd.DataFrame,
+	filter_selections: dict[str, list[str]],
+) -> None:
 	summary = build_flow_summary(team)
 	if summary.empty:
 		st.info("선택한 조건에 이닝 흐름 데이터가 없습니다. 전체 기간 재크롤링 후 표시됩니다.")
+		render_rank_trend(full_team, filter_selections)
 		return
 
 	final_schedule = schedule[schedule["game_status"] == "final"].copy()
 	extra_games = final_schedule[final_schedule["extra_inning_flag"].fillna(0) == 1].copy()
 	streak_extremes = build_period_streak_extremes(team)
-	extra_counts = (
-		team[(team["is_final"]) & (team["extra_inning_flag"].fillna(0) == 1)]
-		.groupby("team", dropna=False)
-		.size()
-		.reset_index(name="extra_games")
-	)
-	flow_table = summary.merge(streak_extremes, on="team", how="left").merge(extra_counts, on="team", how="left")
-	for column in ["max_win_streak", "max_loss_streak", "extra_games"]:
-		flow_table[column] = flow_table[column].fillna(0)
-	flow_table["total_run_diff"] = flow_table["first_5_run_diff"] + flow_table["after_5_run_diff"]
-	flow_table = flow_table.sort_values(["max_win_streak", "total_run_diff"], ascending=[False, False])
 	metric_cols = st.columns(5)
 	metric_cols[0].metric("연장 경기", format_int(len(extra_games)))
 	metric_cols[1].metric("역전승", format_int(summary["comeback_win"].sum()))
@@ -2764,8 +2940,7 @@ def render_flow_insights(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 			)
 			st.plotly_chart(fig, width="stretch")
 
-	st.subheader("팀별 흐름 요약")
-	render_flow_summary_table(flow_table)
+	render_rank_trend(full_team, filter_selections)
 
 
 def render_attendance(schedule: pd.DataFrame, home_team_source: pd.DataFrame, duration_team: pd.DataFrame) -> None:
@@ -2943,7 +3118,14 @@ def main() -> None:
 	schedule_signature = file_signature(SCHEDULE_PATH)
 	team_signature = file_signature(TEAM_PATH)
 	schedule, team = load_data(str(SCHEDULE_PATH), str(TEAM_PATH), schedule_signature, team_signature)
-	filtered_schedule, filtered_team, attendance_schedule, attendance_team, rank_order = filter_data(schedule, team)
+	(
+		filtered_schedule,
+		filtered_team,
+		attendance_schedule,
+		attendance_team,
+		rank_order,
+		filter_selections,
+	) = filter_data(schedule, team)
 
 	if filtered_schedule.empty and filtered_team.empty:
 		st.warning("선택한 조건에 데이터가 없습니다.")
@@ -2966,7 +3148,7 @@ def main() -> None:
 	with matchup_tab:
 		render_matchups(filtered_team, rank_order)
 	with flow_tab:
-		render_flow_insights(filtered_schedule, filtered_team)
+		render_flow_insights(filtered_schedule, filtered_team, team, filter_selections)
 	with attendance_tab:
 		render_attendance(attendance_schedule, attendance_team, filtered_team)
 	with games_tab:
