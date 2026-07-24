@@ -653,6 +653,37 @@ def sidebar_filter_css(team_options: list[str]) -> str:
 		min-width: 4rem !important;
 		width: 4rem !important;
 	}
+	section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"]:has(.st-key-filter_months_select_all),
+	section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"]:has(.st-key-filter_teams_select_all) {
+		display: grid !important;
+		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+		gap: 0.5rem !important;
+		width: min(100%, 16.5rem) !important;
+	}
+	section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"]:has(.st-key-filter_months_select_all)
+		> [data-testid="stColumn"],
+	section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"]:has(.st-key-filter_teams_select_all)
+		> [data-testid="stColumn"] {
+		flex: none !important;
+		min-width: 0 !important;
+		width: 100% !important;
+	}
+	section[data-testid="stSidebar"] .st-key-filter_months_select_all button,
+	section[data-testid="stSidebar"] .st-key-filter_months_clear_all button,
+	section[data-testid="stSidebar"] .st-key-filter_teams_select_all button,
+	section[data-testid="stSidebar"] .st-key-filter_teams_clear_all button {
+		min-height: 2rem;
+		min-width: 0;
+		padding: 0.2rem 0.35rem;
+		width: 100%;
+	}
+	section[data-testid="stSidebar"] .st-key-filter_months_select_all button p,
+	section[data-testid="stSidebar"] .st-key-filter_months_clear_all button p,
+	section[data-testid="stSidebar"] .st-key-filter_teams_select_all button p,
+	section[data-testid="stSidebar"] .st-key-filter_teams_clear_all button p {
+		font-size: 0.78rem;
+		white-space: nowrap;
+	}
 """
 		+ team_pill_color_rules('section[data-testid="stSidebar"] .st-key-filter_teams', team_options)
 		+ "\n\t</style>"
@@ -2232,6 +2263,17 @@ def apply_layout(fig: go.Figure, height: int = 360) -> go.Figure:
 	return fig
 
 
+def set_filter_selection(key: str, values: list[str]) -> None:
+	st.session_state[key] = list(values)
+
+
+def initialize_filter_selection(key: str, options: list[str]) -> None:
+	if key not in st.session_state:
+		st.session_state[key] = list(options)
+		return
+	st.session_state[key] = [value for value in st.session_state[key] if value in options]
+
+
 def filter_data(
 	schedule: pd.DataFrame,
 	team: pd.DataFrame,
@@ -2242,6 +2284,8 @@ def filter_data(
 	default_years = year_options[:1]
 	month_options = sorted(schedule["source_month_label"].dropna().unique().tolist())
 	team_options = sorted(team["team"].dropna().astype(str).unique().tolist())
+	initialize_filter_selection("filter_months", month_options)
+	initialize_filter_selection("filter_teams", team_options)
 
 	with st.sidebar:
 		st.header("필터")
@@ -2250,11 +2294,41 @@ def filter_data(
 			"연도", year_options, default=default_years, selection_mode="multi", width="stretch", key="filter_years"
 		) or []
 		selected_months = st.pills(
-			"월", month_options, default=month_options, selection_mode="multi", width="stretch", key="filter_months"
+			"월", month_options, selection_mode="multi", width="stretch", key="filter_months"
 		) or []
+		month_actions = st.columns(2, gap="small")
+		month_actions[0].button(
+			"전체 월 선택",
+			key="filter_months_select_all",
+			on_click=set_filter_selection,
+			args=("filter_months", month_options),
+			width="stretch",
+		)
+		month_actions[1].button(
+			"전체 월 해제",
+			key="filter_months_clear_all",
+			on_click=set_filter_selection,
+			args=("filter_months", []),
+			width="stretch",
+		)
 		selected_teams = st.pills(
-			"팀", team_options, default=team_options, selection_mode="multi", width="stretch", key="filter_teams"
+			"팀", team_options, selection_mode="multi", width="stretch", key="filter_teams"
 		) or []
+		team_actions = st.columns(2, gap="small")
+		team_actions[0].button(
+			"전체 팀 선택",
+			key="filter_teams_select_all",
+			on_click=set_filter_selection,
+			args=("filter_teams", team_options),
+			width="stretch",
+		)
+		team_actions[1].button(
+			"전체 팀 해제",
+			key="filter_teams_clear_all",
+			on_click=set_filter_selection,
+			args=("filter_teams", []),
+			width="stretch",
+		)
 		selected_home_away = st.pills(
 			"홈/원정",
 			HOME_AWAY_ORDER,
@@ -2265,12 +2339,10 @@ def filter_data(
 		) or []
 
 	schedule_mask = schedule["season_year_label"].isin(selected_years) & schedule["source_month_label"].isin(selected_months)
-	if selected_teams:
-		schedule_mask &= schedule["away_team"].isin(selected_teams) | schedule["home_team"].isin(selected_teams)
+	schedule_mask &= schedule["away_team"].isin(selected_teams) | schedule["home_team"].isin(selected_teams)
 
 	attendance_schedule_mask = schedule["season_year_label"].isin(selected_years) & schedule["source_month_label"].isin(selected_months)
-	if selected_teams:
-		attendance_schedule_mask &= schedule["home_team"].isin(selected_teams)
+	attendance_schedule_mask &= schedule["home_team"].isin(selected_teams)
 
 	rank_mask = (
 		team["season_year_label"].isin(selected_years)
@@ -2281,16 +2353,14 @@ def filter_data(
 	rank_order = rank_standings["team"].astype(str).tolist() if not rank_standings.empty else []
 
 	team_mask = rank_mask.copy()
-	if selected_teams:
-		team_mask &= team["team"].isin(selected_teams)
+	team_mask &= team["team"].isin(selected_teams)
 
 	attendance_team_mask = (
 		team["season_year_label"].isin(selected_years)
 		& team["source_month_label"].isin(selected_months)
 		& (team["home_away_label"] == "홈")
 	)
-	if selected_teams:
-		attendance_team_mask &= team["team"].isin(selected_teams)
+	attendance_team_mask &= team["team"].isin(selected_teams)
 
 	return (
 		schedule[schedule_mask].copy(),
@@ -2716,10 +2786,11 @@ def prepare_rank_trend_display(
 	start_date = selected_dates.min()
 	end_date = selected_dates.max()
 	display = trend[trend["game_date"].between(start_date, end_date)].copy()
-	if selected_teams:
-		season_teams = set(display["team"].astype(str))
-		team_selection = [team for team in selected_teams if team in season_teams]
-		display = display[display["team"].isin(team_selection)].copy()
+	if not selected_teams:
+		return pd.DataFrame(columns=[*trend.columns, "plot_rank"])
+	season_teams = set(display["team"].astype(str))
+	team_selection = [team for team in selected_teams if team in season_teams]
+	display = display[display["team"].isin(team_selection)].copy()
 	display["plot_rank"] = display["rank"].where(display["game_date"].dt.month.isin(months))
 	return display
 
