@@ -2746,7 +2746,7 @@ def build_daily_rank_trend(team: pd.DataFrame, season_year: int) -> pd.DataFrame
 			ascending=[False, False, False, True],
 			na_position="last",
 		).copy()
-		ranked["rank"] = range(1, len(ranked) + 1)
+		ranked["rank"] = ranked["win_pct"].rank(method="min", ascending=False, na_option="bottom").astype(int)
 		ranked_dates.append(ranked)
 
 	trend = pd.concat(ranked_dates, ignore_index=True)
@@ -3207,7 +3207,9 @@ def main() -> None:
 	)
 
 	overview_tab, team_tab, magic_tab, matchup_tab, flow_tab, attendance_tab, games_tab = st.tabs(
-		["리그", "팀", "매직넘버", "상대전적", "흐름", "관중/구장", "경기"]
+		["리그", "팀", "매직넘버", "상대전적", "흐름", "관중/구장", "경기"],
+		key="main_tabs",
+		on_change="rerun",
 	)
 
 	with overview_tab:
