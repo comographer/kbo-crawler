@@ -14,7 +14,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<b>18:30</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -95,7 +95,7 @@
     {
       "row": [
         {
-          "Text": "<b>18:30</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -176,7 +176,7 @@
     {
       "row": [
         {
-          "Text": "<b>18:30</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -257,7 +257,7 @@
     {
       "row": [
         {
-          "Text": "<b>18:30</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -338,7 +338,7 @@
     {
       "row": [
         {
-          "Text": "<b>18:30</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -428,7 +428,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<b>18:30</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -509,7 +509,7 @@
     {
       "row": [
         {
-          "Text": "<b>18:30</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -590,7 +590,7 @@
     {
       "row": [
         {
-          "Text": "<b>18:30</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -671,7 +671,7 @@
     {
       "row": [
         {
-          "Text": "<b>18:30</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -752,7 +752,7 @@
     {
       "row": [
         {
-          "Text": "<b>18:30</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -842,7 +842,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<b>18:30</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -923,7 +923,7 @@
     {
       "row": [
         {
-          "Text": "<b>18:30</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -1004,7 +1004,7 @@
     {
       "row": [
         {
-          "Text": "<b>18:30</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -1085,7 +1085,7 @@
     {
       "row": [
         {
-          "Text": "<b>18:30</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -1166,7 +1166,7 @@
     {
       "row": [
         {
-          "Text": "<b>18:30</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -1256,7 +1256,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<b>18:30</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -1337,7 +1337,7 @@
     {
       "row": [
         {
-          "Text": "<b>18:30</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -1418,7 +1418,7 @@
     {
       "row": [
         {
-          "Text": "<b>18:30</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -1499,7 +1499,7 @@
     {
       "row": [
         {
-          "Text": "<b>18:30</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -1580,7 +1580,7 @@
     {
       "row": [
         {
-          "Text": "<b>18:30</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -1670,7 +1670,88 @@
           "TypeObj": null
         },
         {
-          "Text": "<b>17:00</b>",
+          "Text": "<b>18:00</b>",
+          "Class": "time",
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "<span>NC</span><em><span>vs</span></em><span>키움</span>",
+          "Class": "play",
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "",
+          "Class": "relay",
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "고척",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "-",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        }
+      ],
+      "Class": null,
+      "OnClick": null,
+      "Style": null,
+      "Value": null,
+      "Id": null
+    },
+    {
+      "row": [
+        {
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -1751,7 +1832,7 @@
     {
       "row": [
         {
-          "Text": "<b>17:00</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -1832,7 +1913,7 @@
     {
       "row": [
         {
-          "Text": "<b>17:00</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -1913,7 +1994,7 @@
     {
       "row": [
         {
-          "Text": "<b>17:00</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -1968,87 +2049,6 @@
         },
         {
           "Text": "광주",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "-",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        }
-      ],
-      "Class": null,
-      "OnClick": null,
-      "Style": null,
-      "Value": null,
-      "Id": null
-    },
-    {
-      "row": [
-        {
-          "Text": "<b>17:00</b>",
-          "Class": "time",
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "<span>NC</span><em><span>vs</span></em><span>키움</span>",
-          "Class": "play",
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "",
-          "Class": "relay",
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "고척",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -2084,7 +2084,88 @@
           "TypeObj": null
         },
         {
-          "Text": "<b>17:00</b>",
+          "Text": "<b>14:00</b>",
+          "Class": "time",
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "<span>NC</span><em><span>vs</span></em><span>키움</span>",
+          "Class": "play",
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "",
+          "Class": "relay",
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "고척",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "-",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        }
+      ],
+      "Class": null,
+      "OnClick": null,
+      "Style": null,
+      "Value": null,
+      "Id": null
+    },
+    {
+      "row": [
+        {
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -2165,7 +2246,7 @@
     {
       "row": [
         {
-          "Text": "<b>17:00</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -2246,7 +2327,7 @@
     {
       "row": [
         {
-          "Text": "<b>17:00</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -2327,7 +2408,7 @@
     {
       "row": [
         {
-          "Text": "<b>17:00</b>",
+          "Text": "<b>19:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -2382,87 +2463,6 @@
         },
         {
           "Text": "광주",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "-",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        }
-      ],
-      "Class": null,
-      "OnClick": null,
-      "Style": null,
-      "Value": null,
-      "Id": null
-    },
-    {
-      "row": [
-        {
-          "Text": "<b>17:00</b>",
-          "Class": "time",
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "<span>NC</span><em><span>vs</span></em><span>키움</span>",
-          "Class": "play",
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "",
-          "Class": "relay",
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "고척",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
