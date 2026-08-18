@@ -5819,7 +5819,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>KT</span><em><span>vs</span></em><span>LG</span>",
+          "Text": "<span>KT</span><em><span class=\"lose\">1</span><span>vs</span><span class=\"win\">9</span></em><span>LG</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -5828,7 +5828,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260818&gameId=20260818KTLG0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260818&gameId=20260818KTLG0&section=REVIEW' class='btn2 mr5' id='btnReview'>리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -5837,7 +5837,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260818&gameId=20260818KTLG0&section=HIGHLIGHT' class='btn2' id='btnHighlight' style='width:65px;'>하이라이트</a>",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -5900,7 +5900,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>SSG</span><em><span>vs</span></em><span>삼성</span>",
+          "Text": "<span>SSG</span><em><span class=\"win\">5</span><span>vs</span><span class=\"lose\">4</span></em><span>삼성</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -5909,7 +5909,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260818&gameId=20260818SKSS0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260818&gameId=20260818SKSS0&section=REVIEW' class='btn2 mr5' id='btnReview'>리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -5918,7 +5918,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260818&gameId=20260818SKSS0&section=HIGHLIGHT' class='btn2' id='btnHighlight' style='width:65px;'>하이라이트</a>",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -5981,7 +5981,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>키움</span><em><span>vs</span></em><span>롯데</span>",
+          "Text": "<span>키움</span><em><span class=\"lose\">10</span><span>vs</span><span class=\"win\">15</span></em><span>롯데</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -5990,7 +5990,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260818&gameId=20260818WOLT0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260818&gameId=20260818WOLT0&section=REVIEW' class='btn2 mr5' id='btnReview'>리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -5999,7 +5999,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260818&gameId=20260818WOLT0&section=HIGHLIGHT' class='btn2' id='btnHighlight' style='width:65px;'>하이라이트</a>",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -6062,7 +6062,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>두산</span><em><span>vs</span></em><span>NC</span>",
+          "Text": "<span>두산</span><em><span class=\"win\">6</span><span>vs</span><span class=\"lose\">4</span></em><span>NC</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -6071,7 +6071,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260818&gameId=20260818OBNC0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260818&gameId=20260818OBNC0&section=REVIEW' class='btn2 mr5' id='btnReview'>리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -6080,7 +6080,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260818&gameId=20260818OBNC0&section=HIGHLIGHT' class='btn2' id='btnHighlight' style='width:65px;'>하이라이트</a>",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -6143,7 +6143,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>KIA</span><em><span>vs</span></em><span>한화</span>",
+          "Text": "<span>KIA</span><em><span class=\"win\">4</span><span>vs</span><span class=\"lose\">3</span></em><span>한화</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -6152,7 +6152,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260818&gameId=20260818HTHH0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260818&gameId=20260818HTHH0&section=REVIEW' class='btn2 mr5' id='btnReview'>리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -6161,7 +6161,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260818&gameId=20260818HTHH0&section=HIGHLIGHT' class='btn2' id='btnHighlight' style='width:65px;'>하이라이트</a>",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -8294,7 +8294,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:30</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -8375,7 +8375,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:30</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -8456,7 +8456,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:30</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -8537,7 +8537,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:30</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -8618,7 +8618,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:30</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -8708,7 +8708,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:30</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -8726,7 +8726,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260826&gameId=20260826NCLG0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -8789,7 +8789,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:30</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -8807,7 +8807,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260826&gameId=20260826HHSK0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -8870,7 +8870,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:30</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -8888,7 +8888,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260826&gameId=20260826LTHT0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -8951,7 +8951,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:30</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -8969,7 +8969,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260826&gameId=20260826OBKT0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -9032,7 +9032,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:30</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -9050,7 +9050,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260826&gameId=20260826SSWO0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -9122,7 +9122,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:30</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -9203,7 +9203,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:30</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -9284,7 +9284,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:30</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -9365,7 +9365,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:30</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -9446,7 +9446,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:30</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -9536,7 +9536,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:30</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -9617,7 +9617,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:30</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -9698,7 +9698,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:30</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -9779,7 +9779,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:30</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -9860,7 +9860,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:30</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -9950,7 +9950,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -10031,7 +10031,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -10112,7 +10112,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -10193,7 +10193,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -10274,7 +10274,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -10364,7 +10364,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -10445,7 +10445,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -10526,7 +10526,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -10607,7 +10607,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -10688,7 +10688,7 @@
     {
       "row": [
         {
-          "Text": "<b>19:00</b>",
+          "Text": "<b>18:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
