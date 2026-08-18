@@ -22,19 +22,12 @@ python src/main.py --daily --year 2026 --push
 
 ## Scheduled daily update
 
-On Windows, register a scheduled task that runs the daily update every Tuesday through Sunday at 23:55:
+GitHub Actions runs the daily update every day at 23:55 KST (14:55 UTC):
 
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/register_daily_update_task.ps1
-```
-
-The task uses `.venv\Scripts\python.exe`, runs only while the current user is logged on, wakes the computer when permitted, and retries missed start times when the computer becomes available. Logs are written to `%LOCALAPPDATA%\KBO Dashboard\logs`.
-
-To validate the command without crawling or pushing:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/run_daily_update.ps1 -DryRun
-```
+- Workflow: `.github/workflows/daily-update.yml`
+- Schedule: `55 14 * * *`
+- Manual run: GitHub repository `Actions` > `Daily KBO update` > `Run workflow`
+- Permissions: the workflow uses `contents: write` with the repository `GITHUB_TOKEN`
 
 Before crawling, `--push` fetches the remote branch and fast-forwards when possible. If only generated-data commits have diverged, it merges the remote history before refreshing the data. It stops before crawling when source or configuration changes are uncommitted.
 
