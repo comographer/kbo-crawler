@@ -22,9 +22,16 @@ SCHEDULE_API_URL = f"{BASE_URL}/ws/Schedule.asmx/GetScheduleList"
 GAME_LIST_API_URL = f"{BASE_URL}/ws/Main.asmx/GetKboGameList"
 SCOREBOARD_API_URL = f"{BASE_URL}/ws/Schedule.asmx/GetScoreBoardScroll"
 DEFAULT_SERIES_IDS = "0,9,6"
+POSTSEASON_SERIES_IDS = "3,4,5,7"
 DEFAULT_LEAGUE_ID = "1"
 DEFAULT_SCOREBOARD_TYPE = "3"
 REQUEST_TIMEOUT = (5, 30)
+POSTSEASON_SERIES = {
+	"4": ("WC", "와일드카드 결정전", 1),
+	"3": ("준PO", "준플레이오프", 2),
+	"5": ("PO", "플레이오프", 3),
+	"7": ("KS", "한국시리즈", 4),
+}
 SCOREBOARD_DETAIL_KEYS = (
 	"crowd",
 	"game_start_time",
@@ -376,6 +383,15 @@ def enrich_record_with_game_list(record: dict[str, Any], game_list: list[dict[st
 
 	record["game_id"] = match.get("G_ID") or record.get("game_id", "")
 	record["sr_id"] = str(match.get("SR_ID") if match.get("SR_ID") is not None else record.get("sr_id") or "0")
+	record["series_id"] = record["sr_id"]
+	record["game_sc_id"] = match.get("GAME_SC_ID")
+	record["series_game_code"] = str(match.get("GAME_SC_NM") or "").strip()
+	series = POSTSEASON_SERIES.get(record["sr_id"])
+	if series is not None:
+		record["competition_type"] = "postseason"
+		record["series_code"], record["series_name"], record["round_order"] = series
+		game_no_match = re.search(r"(\d+)$", record["series_game_code"])
+		record["series_game_no"] = int(game_no_match.group(1)) if game_no_match else pd.NA
 	record["game_start_time"] = match.get("G_TM") or record.get("game_start_time", "")
 	record["game_date_key"] = match.get("G_DT") or record.get("game_date_key", "")
 
@@ -427,7 +443,12 @@ def fetch_scoreboard_scroll(session: requests.Session, record: dict[str, Any]) -
 	return record
 
 
-def parse_schedule_rows(year: int, month: int, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def parse_schedule_rows(
+	year: int,
+	month: int,
+	rows: list[dict[str, Any]],
+	competition_type: str = "regular",
+) -> list[dict[str, Any]]:
 	parsed_rows: list[dict[str, Any]] = []
 	current_date = ""
 	current_weekday = ""
@@ -459,6 +480,8 @@ def parse_schedule_rows(year: int, month: int, rows: list[dict[str, Any]]) -> li
 		note_cell = cells[time_index + 7] if len(cells) > time_index + 7 else {}
 
 		play_data = parse_play_cell(play_cell.get("Text"))
+		if not play_data["away_team"] and not play_data["home_team"]:
+			continue
 		note_text = strip_html(note_cell.get("Text"))
 		status_reason = note_text if any(keyword in note_text for keyword in ("우천", "취소", "연기", "서스펜디드", "콜드", "몰수")) else ""
 		game_status = "cancelled" if status_reason else play_data["game_status"]
@@ -469,6 +492,14 @@ def parse_schedule_rows(year: int, month: int, rows: list[dict[str, Any]]) -> li
 				"season_year": year,
 				"game_id": game_id,
 				"sr_id": "",
+				"series_id": pd.NA,
+				"competition_type": competition_type,
+				"series_code": "",
+				"series_name": "",
+				"series_game_code": "",
+				"series_game_no": pd.NA,
+				"round_order": pd.NA,
+				"game_sc_id": pd.NA,
 				"source_month": f"{month:02d}",
 				"game_date": current_date,
 				"game_date_key": current_date.replace("-", ""),
@@ -507,8 +538,28 @@ def output_paths(year: int) -> OutputPaths:
 	)
 
 
-def save_raw_month(year: int, month: int, payload: dict[str, Any], raw_dir: Path) -> Path:
+def postseason_output_paths(year: int) -> OutputPaths:
+	root = Path(__file__).resolve().parents[1]
+	output_dir = root / "data" / "output"
+	raw_dir = root / "data" / "raw" / str(year) / "postseason"
+	output_dir.mkdir(parents=True, exist_ok=True)
+	raw_dir.mkdir(parents=True, exist_ok=True)
+	return OutputPaths(
+		xlsx_path=output_dir / "kbo_postseason_schedule.xlsx",
+		raw_dir=raw_dir,
+	)
+
+
+def save_raw_month(
+	year: int,
+	month: int,
+	payload: dict[str, Any],
+	raw_dir: Path,
+	file_prefix: str = "schedule",
+) -> Path:
 	path = raw_dir / f"schedule_{year}_{month:02d}.json"
+	if file_prefix != "schedule":
+		path = raw_dir / f"{file_prefix}_{year}_{month:02d}.json"
 	path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 	return path
 
@@ -528,6 +579,7 @@ def crawl_season(
 	series_ids: str = DEFAULT_SERIES_IDS,
 	team_id: str = "",
 	cached_game_details: dict[str, dict[str, Any]] | None = None,
+	competition_type: str = "regular",
 ) -> list[dict[str, Any]]:
 	session = build_session()
 	records: list[dict[str, Any]] = []
@@ -537,7 +589,8 @@ def crawl_season(
 	game_details_cache: dict[str, dict[str, Any]] = dict(cached_game_details or {})
 	reused_game_ids: set[str] = set()
 	fetched_game_ids: set[str] = set()
-	paths = output_paths(year)
+	paths = postseason_output_paths(year) if competition_type == "postseason" else output_paths(year)
+	raw_prefix = "postseason" if competition_type == "postseason" else "schedule"
 	try:
 		for month in months:
 			payload = fetch_schedule_month(
@@ -547,20 +600,27 @@ def crawl_season(
 				series_ids=series_ids,
 				team_id=team_id,
 			)
-			save_raw_month(year, month, payload, paths.raw_dir)
-			month_records = parse_schedule_rows(year, month, payload.get("rows", []))
+			save_raw_month(year, month, payload, paths.raw_dir, file_prefix=raw_prefix)
+			month_records = parse_schedule_rows(
+				year,
+				month,
+				payload.get("rows", []),
+				competition_type=competition_type,
+			)
 
 			for record in month_records:
 				date_key = record["game_date_key"]
 				game_id = str(record.get("game_id") or "")
 				has_reusable_details = record.get("game_status") == "final" and game_id in game_details_cache
-				if not has_reusable_details:
+				if not has_reusable_details or competition_type == "postseason":
 					if date_key not in game_list_cache:
 						game_list_cache[date_key] = fetch_game_list(session, date_key)
 					if date_key not in used_game_ids_by_date:
 						used_game_ids_by_date[date_key] = set()
 					record = enrich_record_with_game_list(record, game_list_cache[date_key], used_game_ids_by_date[date_key])
 				game_id = str(record.get("game_id") or "")
+				if competition_type == "postseason" and not game_id and not record.get("series_code"):
+					continue
 				if (
 					record.get("game_status") == "final"
 					and game_id
@@ -595,8 +655,16 @@ def crawl_season(
 def build_schedule_dataframe(records: list[dict[str, Any]]) -> pd.DataFrame:
 	frame = pd.DataFrame(records)
 	frame = frame.drop(columns=["raw_row_json", "sr_id"], errors="ignore")
+	if "competition_type" not in frame.columns:
+		frame["competition_type"] = "regular"
+	else:
+		frame["competition_type"] = frame["competition_type"].fillna("regular")
 
 	numeric_columns = (
+		"series_id",
+		"series_game_no",
+		"round_order",
+		"game_sc_id",
 		"away_score",
 		"home_score",
 		"game_duration_min",
@@ -631,6 +699,14 @@ def build_schedule_dataframe(records: list[dict[str, Any]]) -> pd.DataFrame:
 		desired_columns = [
 			"game_id",
 			"season_year",
+			"competition_type",
+			"series_id",
+			"series_code",
+			"series_name",
+			"series_game_code",
+			"series_game_no",
+			"round_order",
+			"game_sc_id",
 			"source_month",
 			"game_date",
 			"game_date_key",

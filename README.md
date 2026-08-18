@@ -1,6 +1,6 @@
 # KBO Schedule Crawler
 
-This project crawls KBO season game data from the official schedule endpoint, then builds a combined schedule workbook and a per-team workbook in `data/output`.
+This project crawls KBO regular-season and postseason game data from the official schedule endpoint, then builds separate schedule and per-team workbooks in `data/output`.
 
 ## Run
 
@@ -18,6 +18,14 @@ For the daily update, crawl only 2026 and merge it with the fixed 2015-2025 snap
 
 ```bash
 python src/main.py --daily --year 2026 --push
+```
+
+The daily command updates both competitions. Postseason data uses KBO series IDs `3,4,5,7` by default and is kept separate from regular-season standings and magic-number calculations.
+
+To create or refresh only the fixed 2015-2025 postseason snapshot:
+
+```bash
+python src/main.py --daily --year 2026 --refresh-postseason-history
 ```
 
 ## Scheduled daily update
@@ -57,9 +65,14 @@ After the first Cloud deployment, running the crawler with `--push` updates GitH
 - `data/output/kbo_team_sheets.xlsx` for one sheet per team plus a `Total` sheet
 - `data/output/kbo_schedule_history_2015_2025.xlsx` for the fixed 2015-2025 history used by `--daily`
 - `data/raw/YYYY/schedule_YYYY_MM.json` for each crawled month
+- `data/output/kbo_postseason_schedule.xlsx` for the combined postseason schedule
+- `data/output/kbo_postseason_team_sheets.xlsx` for postseason team rows
+- `data/output/kbo_postseason_history_2015_2025.xlsx` for the fixed postseason history used by `--daily`
+- `data/raw/YYYY/postseason/postseason_YYYY_MM.json` for postseason schedule responses
 
 ## Notes
 
 - The crawler uses `https://www.koreabaseball.com/ws/Schedule.asmx/GetScheduleList` behind the schedule page.
 - The review scoreboard data comes from `https://www.koreabaseball.com/ws/Schedule.asmx/GetScoreBoardScroll` with `type=3`, `leId=1`, `srId`, `seasonId`, and `gameId`.
+- Postseason records preserve KBO series ID, round, round order, series game code, and game number.
 - If you want team-specific data, pass `--team-id`.

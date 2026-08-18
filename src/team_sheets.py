@@ -11,6 +11,13 @@ from excel_output import excel_frame_matches, write_with_permission_fallback
 TEAM_COLUMNS = [
 	"game_id",
 	"season_year",
+	"competition_type",
+	"series_id",
+	"series_code",
+	"series_name",
+	"series_game_code",
+	"series_game_no",
+	"round_order",
 	"source_month",
 	"game_date",
 	"weekday_ko",
@@ -145,6 +152,13 @@ def build_team_sheet_rows(schedule_frame: pd.DataFrame) -> pd.DataFrame:
 	for _, row in schedule_frame.iterrows():
 		game_id = row.get("game_id")
 		season_year = row.get("season_year")
+		competition_type = row.get("competition_type")
+		series_id = _to_int(row.get("series_id"))
+		series_code = row.get("series_code")
+		series_name = row.get("series_name")
+		series_game_code = row.get("series_game_code")
+		series_game_no = _to_int(row.get("series_game_no"))
+		round_order = _to_int(row.get("round_order"))
 		source_month = row.get("source_month")
 		game_date = row.get("game_date")
 		weekday_ko = row.get("weekday_ko")
@@ -181,6 +195,13 @@ def build_team_sheet_rows(schedule_frame: pd.DataFrame) -> pd.DataFrame:
 				{
 					"game_id": game_id,
 					"season_year": season_year,
+					"competition_type": competition_type,
+					"series_id": series_id,
+					"series_code": series_code,
+					"series_name": series_name,
+					"series_game_code": series_game_code,
+					"series_game_no": series_game_no,
+					"round_order": round_order,
 					"source_month": source_month,
 					"game_date": game_date,
 					"weekday_ko": weekday_ko,

@@ -37,6 +37,8 @@ TEAM_PATH = first_existing_path(
 	ROOT / "data" / "output" / "kbo_team_sheets.xlsx",
 	ROOT / "data" / "output" / "kbo_team_sheets_2026.xlsx",
 )
+POSTSEASON_SCHEDULE_PATH = ROOT / "data" / "output" / "kbo_postseason_schedule.xlsx"
+POSTSEASON_TEAM_PATH = ROOT / "data" / "output" / "kbo_postseason_team_sheets.xlsx"
 FINAL_RESULTS = {"W", "L", "D"}
 KBO_SEASON_GAMES = 144
 POSTSEASON_TARGETS = {
@@ -45,6 +47,17 @@ POSTSEASON_TARGETS = {
 	3: ("준플레이오프 직행", "semi-playoff"),
 	4: ("와일드카드결정전", "wild-card"),
 	5: ("와일드카드결정전", "wild-card"),
+}
+POSTSEASON_ROUNDS = {
+	"WC": ("와일드카드 결정전", 1, 2),
+	"준PO": ("준플레이오프", 2, 3),
+	"PO": ("플레이오프", 3, 3),
+	"KS": ("한국시리즈", 4, 4),
+}
+POSTSEASON_ROUND_ORDER = tuple(POSTSEASON_ROUNDS)
+POSTSEASON_TEAM_ALIASES = {
+	"SK": "SSG",
+	"넥센": "키움",
 }
 RANK_TARGETS = tuple(range(1, 10))
 RESULT_COLORS = {
@@ -838,6 +851,93 @@ def magic_number_css() -> str:
 	"""
 
 
+def postseason_css() -> str:
+	if ACTIVE_DARK_MODE:
+		colors = {
+			"surface": "#11181C",
+			"surface_alt": "#172126",
+			"border": "#30414A",
+			"muted": "#9FB0B9",
+			"text": "#E8EEF1",
+			"accent": "#D6A63A",
+			"winner": "#80C991",
+		}
+	else:
+		colors = {
+			"surface": "#FFFFFF",
+			"surface_alt": "#F5F8F9",
+			"border": "#D9E0E4",
+			"muted": "#65747C",
+			"text": "#263238",
+			"accent": "#9B7216",
+			"winner": "#2E7D47",
+		}
+	return f"""
+	<style>
+	.postseason-bracket {{
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 0.65rem;
+		width: 100%;
+		margin: 0.2rem 0 1.1rem;
+	}}
+	.postseason-stage {{
+		min-width: 0;
+		border: 1px solid {colors['border']};
+		border-top-width: 3px;
+		border-radius: 6px;
+		background: {colors['surface']};
+		overflow: hidden;
+	}}
+	.postseason-stage.stage-wc {{border-top-color: #C77A42;}}
+	.postseason-stage.stage-semi {{border-top-color: #54A66A;}}
+	.postseason-stage.stage-po {{border-top-color: #4C8CCB;}}
+	.postseason-stage.stage-ks {{border-top-color: #D6A63A;}}
+	.postseason-stage-head {{
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.4rem;
+		padding: 0.62rem 0.7rem;
+		border-bottom: 1px solid {colors['border']};
+		background: {colors['surface_alt']};
+	}}
+	.postseason-stage-title {{color: {colors['text']}; font-size: 0.9rem; font-weight: 800; white-space: nowrap;}}
+	.postseason-stage-state {{color: {colors['muted']}; font-size: 0.7rem; white-space: nowrap;}}
+	.postseason-stage-body {{padding: 0.55rem 0.7rem 0.62rem;}}
+	.postseason-team-row {{
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: center;
+		gap: 0.45rem;
+		min-height: 1.9rem;
+		color: {colors['text']};
+	}}
+	.postseason-team-row + .postseason-team-row {{border-top: 1px solid {colors['border']};}}
+	.postseason-team-name {{overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700;}}
+	.postseason-team-seed {{margin-right: 0.28rem; color: {colors['muted']}; font-size: 0.7rem; font-weight: 600;}}
+	.postseason-team-wins {{font-size: 1rem; font-weight: 800;}}
+	.postseason-team-row.winner .postseason-team-name,
+	.postseason-team-row.winner .postseason-team-wins {{color: {colors['winner']};}}
+	.postseason-stage-note {{
+		margin-top: 0.48rem;
+		padding-top: 0.48rem;
+		border-top: 1px solid {colors['border']};
+		color: {colors['muted']};
+		font-size: 0.72rem;
+		line-height: 1.35;
+	}}
+	.postseason-stage-note strong {{color: {colors['accent']};}}
+	@media (max-width: 980px) {{
+		.postseason-bracket {{grid-template-columns: repeat(2, minmax(0, 1fr));}}
+	}}
+	@media (max-width: 560px) {{
+		.postseason-bracket {{grid-template-columns: minmax(0, 1fr);}}
+	}}
+	</style>
+	"""
+
+
 def matchup_matrix_css() -> str:
 	if ACTIVE_DARK_MODE:
 		colors = {
@@ -1035,6 +1135,13 @@ def prepare_schedule(frame: pd.DataFrame) -> pd.DataFrame:
 		[
 			"game_id",
 			"season_year",
+			"competition_type",
+			"series_id",
+			"series_code",
+			"series_name",
+			"series_game_code",
+			"series_game_no",
+			"round_order",
 			"source_month",
 			"game_date",
 			"game_start_time",
@@ -1081,6 +1188,9 @@ def prepare_schedule(frame: pd.DataFrame) -> pd.DataFrame:
 		frame,
 		[
 			"season_year",
+			"series_id",
+			"series_game_no",
+			"round_order",
 			"game_duration_min",
 			"crowd",
 			"innings_played",
@@ -1113,6 +1223,10 @@ def prepare_schedule(frame: pd.DataFrame) -> pd.DataFrame:
 		],
 	)
 	frame["game_date"] = pd.to_datetime(frame["game_date"], errors="coerce")
+	frame["competition_type"] = frame["competition_type"].fillna("regular").astype(str)
+	frame["series_code"] = frame["series_code"].fillna("").astype(str)
+	frame["series_name"] = frame["series_name"].fillna("").astype(str)
+	frame["series_game_code"] = frame["series_game_code"].fillna("").astype(str)
 	frame["season_year_label"] = frame["season_year"].map(year_label)
 	frame["source_month_label"] = frame["source_month"].map(month_label)
 	frame["game_status"] = frame["game_status"].fillna("unknown").astype(str)
@@ -1137,6 +1251,13 @@ def prepare_team(frame: pd.DataFrame) -> pd.DataFrame:
 		[
 			"game_id",
 			"season_year",
+			"competition_type",
+			"series_id",
+			"series_code",
+			"series_name",
+			"series_game_code",
+			"series_game_no",
+			"round_order",
 			"source_month",
 			"game_date",
 			"weekday_ko",
@@ -1196,6 +1317,9 @@ def prepare_team(frame: pd.DataFrame) -> pd.DataFrame:
 		frame,
 		[
 			"season_year",
+			"series_id",
+			"series_game_no",
+			"round_order",
 			"game_duration_min",
 			"crowd",
 			"innings_played",
@@ -1243,6 +1367,10 @@ def prepare_team(frame: pd.DataFrame) -> pd.DataFrame:
 		],
 	)
 	frame["game_date"] = pd.to_datetime(frame["game_date"], errors="coerce")
+	frame["competition_type"] = frame["competition_type"].fillna("regular").astype(str)
+	frame["series_code"] = frame["series_code"].fillna("").astype(str)
+	frame["series_name"] = frame["series_name"].fillna("").astype(str)
+	frame["series_game_code"] = frame["series_game_code"].fillna("").astype(str)
 	frame["season_year_label"] = frame["season_year"].map(year_label)
 	frame["source_month_label"] = frame["source_month"].map(month_label)
 	frame["result"] = frame["result"].fillna("Cancel").astype(str)
@@ -2267,6 +2395,11 @@ def set_filter_selection(key: str, values: list[str]) -> None:
 	st.session_state[key] = list(values)
 
 
+def handle_competition_mode_change() -> None:
+	if st.session_state.get("competition_mode") == "포스트시즌":
+		st.session_state.pop("postseason_filter_team_year", None)
+
+
 def initialize_filter_selection(key: str, options: list[str]) -> None:
 	if key not in st.session_state:
 		st.session_state[key] = list(options)
@@ -2375,6 +2508,367 @@ def filter_data(
 			"home_away": list(selected_home_away),
 		},
 	)
+
+
+def filter_postseason_data(
+	schedule: pd.DataFrame,
+	team: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame, int | None, dict[str, Any]]:
+	year_options = sorted(schedule["season_year_label"].dropna().unique().tolist(), reverse=True)
+	default_years = year_options[:1]
+	with st.sidebar:
+		st.header("포스트시즌 필터")
+		selected_years = st.pills(
+			"연도",
+			year_options,
+			default=default_years,
+			selection_mode="multi",
+			width="stretch",
+			key="postseason_filter_years",
+		) or []
+
+	selected_year_labels = [str(value) for value in selected_years]
+	selected_year = max((int(value) for value in selected_year_labels if value.isdigit()), default=None)
+	if selected_year is None:
+		return schedule.iloc[0:0].copy(), team.iloc[0:0].copy(), None, {
+			"years": selected_year_labels,
+			"teams": [],
+			"round": "전체",
+		}
+
+	year_label_value = str(selected_year)
+	year_schedule = schedule[schedule["season_year_label"].eq(year_label_value)].copy()
+	year_team = team[team["season_year_label"].eq(year_label_value)].copy()
+	team_options = sorted(
+		set(year_schedule["away_team"].dropna().astype(str))
+		| set(year_schedule["home_team"].dropna().astype(str))
+	)
+	if st.session_state.get("postseason_filter_team_year") != selected_year:
+		st.session_state["postseason_filter_team_year"] = selected_year
+		st.session_state["postseason_filter_teams"] = list(team_options)
+
+	round_codes = [
+		code
+		for code in POSTSEASON_ROUND_ORDER
+		if code in set(year_schedule["series_code"].dropna().astype(str))
+	]
+	round_labels = ["전체", *[POSTSEASON_ROUNDS[code][0] for code in round_codes]]
+	with st.sidebar:
+		st.markdown(
+			sidebar_filter_css(team_options).replace("filter_", "postseason_filter_"),
+			unsafe_allow_html=True,
+		)
+		st.caption(f"적용 시즌: {selected_year}")
+		selected_round = st.pills(
+			"라운드",
+			round_labels,
+			default="전체",
+			selection_mode="single",
+			required=True,
+			width="stretch",
+			key="postseason_filter_round",
+		) or "전체"
+		selected_teams = st.pills(
+			"팀",
+			team_options,
+			selection_mode="multi",
+			width="stretch",
+			key="postseason_filter_teams",
+		) or []
+		team_actions = st.columns(2, gap="small")
+		team_actions[0].button(
+			"전체 팀 선택",
+			key="postseason_filter_teams_select_all",
+			on_click=set_filter_selection,
+			args=("postseason_filter_teams", team_options),
+			width="stretch",
+		)
+		team_actions[1].button(
+			"전체 팀 해제",
+			key="postseason_filter_teams_clear_all",
+			on_click=set_filter_selection,
+			args=("postseason_filter_teams", []),
+			width="stretch",
+		)
+
+	selected_round_code = next(
+		(code for code, values in POSTSEASON_ROUNDS.items() if values[0] == selected_round),
+		None,
+	)
+	schedule_mask = year_schedule["away_team"].isin(selected_teams) | year_schedule["home_team"].isin(selected_teams)
+	team_mask = year_team["team"].isin(selected_teams)
+	if selected_round_code is not None:
+		schedule_mask &= year_schedule["series_code"].eq(selected_round_code)
+		team_mask &= year_team["series_code"].eq(selected_round_code)
+
+	return (
+		year_schedule[schedule_mask].copy(),
+		year_team[team_mask].copy(),
+		selected_year,
+		{
+			"years": selected_year_labels,
+			"teams": list(selected_teams),
+			"round": str(selected_round),
+		},
+	)
+
+
+def postseason_seed_order(regular_team: pd.DataFrame, season_year: int) -> list[str]:
+	season = regular_team[
+		regular_team["is_final"]
+		& pd.to_numeric(regular_team["season_year"], errors="coerce").eq(season_year)
+	].copy()
+	standings = build_standings(season)
+	return standings["team"].dropna().astype(str).tolist() if not standings.empty else []
+
+
+def canonical_postseason_team(value: Any) -> str:
+	if pd.isna(value):
+		return ""
+	team = str(value)
+	return POSTSEASON_TEAM_ALIASES.get(team, team)
+
+
+def canonical_postseason_teams(teams: list[str]) -> list[str]:
+	result: list[str] = []
+	for team in teams:
+		canonical = canonical_postseason_team(team)
+		if canonical and canonical not in result:
+			result.append(canonical)
+	return result
+
+
+def build_postseason_matchup_history(
+	team: pd.DataFrame,
+	season_year: int,
+	qualifier_teams: list[str],
+) -> pd.DataFrame:
+	canonical_qualifiers = set(canonical_postseason_teams(qualifier_teams))
+	years = pd.to_numeric(team["season_year"], errors="coerce")
+	history = team[years.between(2015, season_year) & team["is_final"]].copy()
+	history["team"] = history["team"].map(canonical_postseason_team)
+	history["opponent"] = history["opponent"].map(canonical_postseason_team)
+	return history[
+		history["team"].isin(canonical_qualifiers)
+		& history["opponent"].isin(canonical_qualifiers)
+	].copy()
+
+
+def postseason_series_summaries(schedule: pd.DataFrame, seed_order: list[str]) -> list[dict[str, Any]]:
+	seed_map = {team: index + 1 for index, team in enumerate(seed_order)}
+	series_teams: dict[str, list[str]] = {}
+	for code in POSTSEASON_ROUND_ORDER:
+		games = schedule[schedule["series_code"].eq(code)]
+		teams = set(games["away_team"].dropna().astype(str)) | set(games["home_team"].dropna().astype(str))
+		series_teams[code] = sorted(teams, key=lambda team: (seed_map.get(team, 99), team))
+
+	summaries: list[dict[str, Any]] = []
+	for index, code in enumerate(POSTSEASON_ROUND_ORDER):
+		name, order, wins_needed = POSTSEASON_ROUNDS[code]
+		games = schedule[schedule["series_code"].eq(code)].sort_values(
+			["game_date", "series_game_no", "game_start_time"],
+			kind="stable",
+		)
+		teams = series_teams[code]
+		wins = {team: 0 for team in teams}
+		draws = 0
+		final_games = games[games["game_status"].eq("final")].dropna(subset=["away_score", "home_score"])
+		for _, game in final_games.iterrows():
+			away = str(game.get("away_team") or "")
+			home = str(game.get("home_team") or "")
+			if game["away_score"] > game["home_score"]:
+				wins[away] = wins.get(away, 0) + 1
+			elif game["home_score"] > game["away_score"]:
+				wins[home] = wins.get(home, 0) + 1
+			else:
+				draws += 1
+
+		winner: str | None = None
+		if code == "WC" and len(teams) >= 2:
+			higher_seed, lower_seed = teams[0], teams[1]
+			if wins.get(higher_seed, 0) >= 1 or draws >= 1:
+				winner = higher_seed
+			elif wins.get(lower_seed, 0) >= 2:
+				winner = lower_seed
+		else:
+			winner = next((team for team, count in wins.items() if count >= wins_needed), None)
+
+		if winner is None and index + 1 < len(POSTSEASON_ROUND_ORDER):
+			next_teams = set(series_teams[POSTSEASON_ROUND_ORDER[index + 1]])
+			advanced = [team for team in teams if team in next_teams]
+			if len(advanced) == 1:
+				winner = advanced[0]
+
+		if teams:
+			display_teams = teams
+		elif code == "WC":
+			display_teams = [*seed_order[3:5]]
+		elif code == "준PO":
+			display_teams = [*(seed_order[2:3]), "WC 승자"]
+		elif code == "PO":
+			display_teams = [*(seed_order[1:2]), "준PO 승자"]
+		else:
+			display_teams = [*(seed_order[0:1]), "PO 승자"]
+
+		preview_games = games[games["game_status"].eq("preview")]
+		if winner:
+			state = "종료"
+			note = f"{winner} 우승" if code == "KS" else f"{winner} 진출"
+			if code == "WC":
+				note = f"4위 어드밴티지 · {winner} 진출"
+		elif not final_games.empty:
+			state = "진행 중"
+			note = f"{len(final_games)}경기 종료"
+		elif not games.empty:
+			state = "예정"
+			note = "대진 확정"
+		else:
+			state = "대기"
+			note = "이전 라운드 종료 후 확정"
+		if not preview_games.empty:
+			next_game = preview_games.iloc[0]
+			date_value = next_game.get("game_date")
+			date_text = date_value.strftime("%m.%d") if isinstance(date_value, pd.Timestamp) else ""
+			note = f"다음 경기 {date_text} {next_game.get('game_start_time') or ''}".strip()
+
+		summaries.append(
+			{
+				"code": code,
+				"name": name,
+				"order": order,
+				"state": state,
+				"teams": display_teams,
+				"wins": wins,
+				"draws": draws,
+				"winner": winner,
+				"note": note,
+				"games": len(final_games),
+			}
+		)
+	return summaries
+
+
+def render_postseason_bracket(summaries: list[dict[str, Any]], seed_order: list[str]) -> None:
+	seed_map = {team: index + 1 for index, team in enumerate(seed_order)}
+	stage_classes = {"WC": "wc", "준PO": "semi", "PO": "po", "KS": "ks"}
+	stages = []
+	for summary in summaries:
+		team_rows = []
+		for team in summary["teams"]:
+			is_placeholder = "승자" in team
+			seed = seed_map.get(team)
+			seed_html = f'<span class="postseason-team-seed">{seed}위</span>' if seed else ""
+			color = team_color(team) if not is_placeholder else "inherit"
+			winner_class = " winner" if team == summary["winner"] else ""
+			wins = summary["wins"].get(team)
+			wins_html = f'<span class="postseason-team-wins">{wins}</span>' if wins is not None else ""
+			team_rows.append(
+				f'<div class="postseason-team-row{winner_class}">'
+				f'<span class="postseason-team-name" style="color:{html.escape(color)}">'
+				f'{seed_html}{html.escape(team)}</span>{wins_html}</div>'
+			)
+		draw_text = f" · 무 {summary['draws']}" if summary["draws"] else ""
+		stages.append(
+			f'<section class="postseason-stage stage-{stage_classes[summary["code"]]}">'
+			f'<div class="postseason-stage-head"><span class="postseason-stage-title">{html.escape(summary["name"])}</span>'
+			f'<span class="postseason-stage-state">{html.escape(summary["state"])}</span></div>'
+			f'<div class="postseason-stage-body">{"".join(team_rows)}'
+			f'<div class="postseason-stage-note"><strong>{html.escape(summary["note"])}</strong>{draw_text}</div>'
+			f'</div></section>'
+		)
+	st.markdown(postseason_css(), unsafe_allow_html=True)
+	st.markdown(f'<div class="postseason-bracket">{"".join(stages)}</div>', unsafe_allow_html=True)
+
+
+def postseason_games_table(schedule: pd.DataFrame) -> pd.DataFrame:
+	if schedule.empty:
+		return pd.DataFrame()
+	table = schedule.copy()
+	table["score"] = table.apply(
+		lambda row: (
+			f"{format_int(row['away_score'])} : {format_int(row['home_score'])}"
+			if row.get("game_status") == "final"
+			else "-"
+		),
+		axis=1,
+	)
+	return table.sort_values(
+		["game_date", "series_game_no", "game_start_time"],
+		ascending=[False, False, False],
+		kind="stable",
+	)[
+		[
+			"series_name",
+			"series_game_no",
+			"game_date",
+			"game_start_time",
+			"away_team",
+			"score",
+			"home_team",
+			"stadium",
+			"crowd",
+			"game_duration_min",
+			"game_status_label",
+		]
+	].rename(
+		columns={
+			"series_name": "라운드",
+			"series_game_no": "차전",
+			"game_date": "날짜",
+			"game_start_time": "시작",
+			"away_team": "원정",
+			"score": "스코어",
+			"home_team": "홈",
+			"stadium": "구장",
+			"crowd": "관중",
+			"game_duration_min": "시간(분)",
+			"game_status_label": "상태",
+		}
+	)
+
+
+def render_postseason_overview(
+	schedule: pd.DataFrame,
+	all_season_schedule: pd.DataFrame,
+	seed_order: list[str],
+	season_year: int,
+) -> None:
+	summaries = postseason_series_summaries(all_season_schedule, seed_order)
+	champion = next((summary["winner"] for summary in summaries if summary["code"] == "KS"), None)
+	started = [summary for summary in summaries if summary["state"] != "대기"]
+	current_round = started[-1]["name"] if started else "일정 대기"
+	completed = all_season_schedule[all_season_schedule["game_status"].eq("final")]
+
+	metric_cols = st.columns(4)
+	metric_cols[0].metric("시즌", str(season_year))
+	metric_cols[1].metric("현재 단계", "시즌 종료" if champion else current_round)
+	metric_cols[2].metric("종료 경기", format_int(len(completed)))
+	metric_cols[3].metric("우승", champion or "-")
+
+	st.subheader("포스트시즌 대진")
+	render_postseason_bracket(summaries, seed_order)
+
+	st.subheader("선택 조건 경기")
+	games = postseason_games_table(schedule)
+	if games.empty:
+		st.info("선택한 조건에 포스트시즌 경기가 없습니다.")
+	else:
+		render_table(games)
+
+
+def render_postseason_games(schedule: pd.DataFrame) -> None:
+	completed = schedule[schedule["game_status"].eq("final")]
+	metric_cols = st.columns(4)
+	metric_cols[0].metric("경기", format_int(len(schedule)))
+	metric_cols[1].metric("종료", format_int(len(completed)))
+	metric_cols[2].metric("총 관중", format_int(completed["crowd"].sum()))
+	metric_cols[3].metric("평균 경기시간", f"{format_float(completed['game_duration_min'].mean(), 0)}분")
+	st.subheader("포스트시즌 경기 목록")
+	games = postseason_games_table(schedule)
+	if games.empty:
+		st.info("선택한 조건에 포스트시즌 경기가 없습니다.")
+	else:
+		render_table(games)
 
 
 def render_overview(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
@@ -2608,9 +3102,13 @@ def matchup_record_cell_html(row: pd.Series) -> str:
 	)
 
 
-def render_matchup_matrix(matchups: pd.DataFrame, rank_order: list[str]) -> None:
-	row_teams = matchups["team"].dropna().astype(str).unique().tolist()
-	opponent_teams = matchups["opponent"].dropna().astype(str).unique().tolist()
+def render_matchup_matrix(
+	matchups: pd.DataFrame,
+	rank_order: list[str],
+	matrix_teams: list[str] | None = None,
+) -> None:
+	row_teams = list(matrix_teams) if matrix_teams is not None else matchups["team"].dropna().astype(str).unique().tolist()
+	opponent_teams = list(matrix_teams) if matrix_teams is not None else matchups["opponent"].dropna().astype(str).unique().tolist()
 	row_order = [team for team in rank_order if team in row_teams]
 	row_order += [team for team in row_teams if team not in row_order]
 	column_order = [team for team in rank_order if team in opponent_teams]
@@ -2644,13 +3142,23 @@ def render_matchup_matrix(matchups: pd.DataFrame, rank_order: list[str]) -> None
 	)
 
 
-def render_matchups(team: pd.DataFrame, rank_order: list[str]) -> None:
+def render_matchups(
+	team: pd.DataFrame,
+	rank_order: list[str],
+	matrix_teams: list[str] | None = None,
+	scope_caption: str | None = None,
+) -> None:
 	final_frame = team[team["is_final"]].copy()
-	if final_frame.empty:
+	if final_frame.empty and not matrix_teams:
 		st.info("선택한 조건에 상대전적 데이터가 없습니다.")
 		return
 
-	matchups = build_matchup_records(final_frame)
+	if final_frame.empty:
+		matchups = pd.DataFrame(columns=["team", "opponent"])
+	else:
+		matchups = build_matchup_records(final_frame)
+	if scope_caption:
+		st.caption(scope_caption)
 	st.markdown(matchup_matrix_css(), unsafe_allow_html=True)
 	st.markdown(
 		'<div class="matchup-legend">'
@@ -2662,7 +3170,7 @@ def render_matchups(team: pd.DataFrame, rank_order: list[str]) -> None:
 		'</div>',
 		unsafe_allow_html=True,
 	)
-	render_matchup_matrix(matchups, rank_order)
+	render_matchup_matrix(matchups, rank_order, matrix_teams=matrix_teams)
 
 
 def phase_run_diff_bar(summary: pd.DataFrame) -> go.Figure:
@@ -3181,6 +3689,17 @@ def main() -> None:
 	set_visual_mode(dark_mode)
 	st.markdown(theme_css(dark_mode), unsafe_allow_html=True)
 	st.title("KBO Dashboard")
+	competition_mode = st.segmented_control(
+		"대회",
+		["정규시즌", "포스트시즌"],
+		default="정규시즌",
+		selection_mode="single",
+		required=True,
+		width="stretch",
+		key="competition_mode",
+		on_change=handle_competition_mode_change,
+		label_visibility="collapsed",
+	) or "정규시즌"
 
 	if not SCHEDULE_PATH.exists() or not TEAM_PATH.exists():
 		st.error("data/output 폴더에 필요한 엑셀 파일이 없습니다.")
@@ -3189,6 +3708,84 @@ def main() -> None:
 	schedule_signature = file_signature(SCHEDULE_PATH)
 	team_signature = file_signature(TEAM_PATH)
 	schedule, team = load_data(str(SCHEDULE_PATH), str(TEAM_PATH), schedule_signature, team_signature)
+
+	if competition_mode == "포스트시즌":
+		if not POSTSEASON_SCHEDULE_PATH.exists() or not POSTSEASON_TEAM_PATH.exists():
+			st.info("포스트시즌 크롤링 데이터가 아직 없습니다.")
+			return
+		postseason_schedule_signature = file_signature(POSTSEASON_SCHEDULE_PATH)
+		postseason_team_signature = file_signature(POSTSEASON_TEAM_PATH)
+		postseason_schedule, postseason_team = load_data(
+			str(POSTSEASON_SCHEDULE_PATH),
+			str(POSTSEASON_TEAM_PATH),
+			postseason_schedule_signature,
+			postseason_team_signature,
+		)
+		filtered_postseason_schedule, filtered_postseason_team, selected_year, postseason_filters = (
+			filter_postseason_data(postseason_schedule, postseason_team)
+		)
+		if selected_year is None:
+			st.warning("표시할 포스트시즌 연도를 선택해 주세요.")
+			return
+		season_postseason_schedule = postseason_schedule[
+			pd.to_numeric(postseason_schedule["season_year"], errors="coerce").eq(selected_year)
+		].copy()
+		seed_order = postseason_seed_order(team, selected_year)
+		qualifier_teams = sorted(
+			set(season_postseason_schedule["away_team"].dropna().astype(str))
+			| set(season_postseason_schedule["home_team"].dropna().astype(str))
+		)
+		canonical_seed_order = canonical_postseason_teams(seed_order)
+		canonical_qualifiers = set(canonical_postseason_teams(qualifier_teams))
+		qualifier_order = [team for team in canonical_seed_order if team in canonical_qualifiers]
+		qualifier_order += sorted(team for team in canonical_qualifiers if team not in qualifier_order)
+		selected_matchup_teams = set(canonical_postseason_teams(postseason_filters["teams"]))
+		matchup_order = [team for team in qualifier_order if team in selected_matchup_teams]
+		postseason_matchup_history = build_postseason_matchup_history(
+			postseason_team,
+			selected_year,
+			matchup_order,
+		)
+		if len(postseason_filters["years"]) > 1:
+			st.caption(f"선택한 연도 중 가장 최신인 {selected_year} 포스트시즌을 표시합니다.")
+		if filtered_postseason_schedule.empty and filtered_postseason_team.empty:
+			st.warning("선택한 조건에 데이터가 없습니다.")
+		st.caption(
+			f"{selected_year} 포스트시즌 · Schedule {len(filtered_postseason_schedule):,} games · "
+			f"Team rows {len(filtered_postseason_team):,} · {POSTSEASON_SCHEDULE_PATH.name} / {POSTSEASON_TEAM_PATH.name}"
+		)
+
+		bracket_tab, postseason_team_tab, postseason_matchup_tab, postseason_games_tab, postseason_attendance_tab = st.tabs(
+			["대진", "팀", "상대전적", "경기", "관중/구장"],
+			key="postseason_tabs",
+			on_change="rerun",
+		)
+		with bracket_tab:
+			render_postseason_overview(
+				filtered_postseason_schedule,
+				season_postseason_schedule,
+				seed_order,
+				selected_year,
+			)
+		with postseason_team_tab:
+			render_team_detail(filtered_postseason_team, seed_order)
+		with postseason_matchup_tab:
+			render_matchups(
+				postseason_matchup_history,
+				matchup_order,
+				matrix_teams=matchup_order,
+				scope_caption=f"2015~{selected_year} 포스트시즌 누적 · SK는 SSG, 넥센은 키움 전적으로 통합",
+			)
+		with postseason_games_tab:
+			render_postseason_games(filtered_postseason_schedule)
+		with postseason_attendance_tab:
+			render_attendance(
+				filtered_postseason_schedule,
+				filtered_postseason_team,
+				filtered_postseason_team,
+			)
+		return
+
 	(
 		filtered_schedule,
 		filtered_team,
