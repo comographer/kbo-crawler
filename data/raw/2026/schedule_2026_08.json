@@ -7061,7 +7061,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>롯데</span><em><span>vs</span></em><span>두산</span>",
+          "Text": "<span>롯데</span><em><span class=\"win\">11</span><span>vs</span><span class=\"lose\">4</span></em><span>두산</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -7070,7 +7070,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260821&gameId=20260821LTOB0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260821&gameId=20260821LTOB0&section=REVIEW' class='btn2 mr5' id='btnReview'>리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -7079,7 +7079,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260821&gameId=20260821LTOB0&section=HIGHLIGHT' class='btn2' id='btnHighlight' style='width:65px;'>하이라이트</a>",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -7142,7 +7142,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>KT</span><em><span>vs</span></em><span>SSG</span>",
+          "Text": "<span>KT</span><em><span class=\"same\">3</span><span>vs</span><span class=\"same\">3</span></em><span>SSG</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -7151,7 +7151,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260821&gameId=20260821KTSK0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260821&gameId=20260821KTSK0&section=REVIEW' class='btn2 mr5' id='btnReview'>리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -7160,7 +7160,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260821&gameId=20260821KTSK0&section=HIGHLIGHT' class='btn2' id='btnHighlight' style='width:65px;'>하이라이트</a>",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -7223,7 +7223,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>삼성</span><em><span>vs</span></em><span>NC</span>",
+          "Text": "<span>삼성</span><em><span class=\"lose\">2</span><span>vs</span><span class=\"win\">3</span></em><span>NC</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -7232,7 +7232,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260821&gameId=20260821SSNC0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260821&gameId=20260821SSNC0&section=REVIEW' class='btn2 mr5' id='btnReview'>리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -7241,7 +7241,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260821&gameId=20260821SSNC0&section=HIGHLIGHT' class='btn2' id='btnHighlight' style='width:65px;'>하이라이트</a>",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -7304,7 +7304,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>LG</span><em><span>vs</span></em><span>한화</span>",
+          "Text": "<span>LG</span><em><span class=\"lose\">11</span><span>vs</span><span class=\"win\">15</span></em><span>한화</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -7313,7 +7313,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260821&gameId=20260821LGHH0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260821&gameId=20260821LGHH0&section=REVIEW' class='btn2 mr5' id='btnReview'>리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -7322,7 +7322,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260821&gameId=20260821LGHH0&section=HIGHLIGHT' class='btn2' id='btnHighlight' style='width:65px;'>하이라이트</a>",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -7385,7 +7385,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>KIA</span><em><span>vs</span></em><span>키움</span>",
+          "Text": "<span>KIA</span><em><span class=\"win\">11</span><span>vs</span><span class=\"lose\">1</span></em><span>키움</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -7394,7 +7394,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260821&gameId=20260821HTWO0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260821&gameId=20260821HTWO0&section=REVIEW' class='btn2 mr5' id='btnReview'>리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -7403,7 +7403,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260821&gameId=20260821HTWO0&section=HIGHLIGHT' class='btn2' id='btnHighlight' style='width:65px;'>하이라이트</a>",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -8330,7 +8330,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "MS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -8411,7 +8411,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -8492,7 +8492,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-2T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -8573,7 +8573,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -8654,7 +8654,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KN-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -8744,7 +8744,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "MS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -8825,7 +8825,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -8906,7 +8906,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-2T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -8987,7 +8987,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -9068,7 +9068,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KN-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -9158,7 +9158,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "MS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -9239,7 +9239,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -9320,7 +9320,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-2T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -9401,7 +9401,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -9482,7 +9482,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KN-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -9572,7 +9572,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "MS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -9653,7 +9653,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-2T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -9734,7 +9734,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -9815,7 +9815,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -9896,7 +9896,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KN-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -9968,7 +9968,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260829&gameId=20260829WOOB0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -9986,7 +9986,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "MS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -10049,7 +10049,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260829&gameId=20260829KTSS0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -10067,7 +10067,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-2T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -10130,7 +10130,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260829&gameId=20260829LGLT0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -10148,7 +10148,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -10211,7 +10211,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260829&gameId=20260829SKHT0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -10229,7 +10229,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -10292,7 +10292,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260829&gameId=20260829NCHH0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -10310,7 +10310,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KN-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -10400,7 +10400,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "MS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -10481,7 +10481,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-2T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -10562,7 +10562,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -10643,7 +10643,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -10724,7 +10724,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KN-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
