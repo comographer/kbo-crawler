@@ -860,7 +860,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260903&gameId=20260903LGOB0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -941,7 +941,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260903&gameId=20260903LTSS0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -1022,7 +1022,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260903&gameId=20260903HHKT0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -1103,7 +1103,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260903&gameId=20260903HTNC0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -1184,7 +1184,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260903&gameId=20260903SKWO0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
