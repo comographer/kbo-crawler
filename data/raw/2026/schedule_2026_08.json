@@ -9554,7 +9554,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260828&gameId=20260828WOOB0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -9599,7 +9599,7 @@
           "TypeObj": null
         },
         {
-          "Text": "-",
+          "Text": "그라운드사정",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -9635,7 +9635,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260828&gameId=20260828KTSS0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -9680,7 +9680,7 @@
           "TypeObj": null
         },
         {
-          "Text": "-",
+          "Text": "그라운드사정",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -9716,7 +9716,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260828&gameId=20260828LGLT0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -9761,7 +9761,7 @@
           "TypeObj": null
         },
         {
-          "Text": "-",
+          "Text": "우천취소",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -9797,7 +9797,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260828&gameId=20260828SKHT0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -9842,7 +9842,7 @@
           "TypeObj": null
         },
         {
-          "Text": "-",
+          "Text": "우천취소",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -9878,7 +9878,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260828&gameId=20260828NCHH0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -9923,7 +9923,7 @@
           "TypeObj": null
         },
         {
-          "Text": "-",
+          "Text": "우천취소",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
