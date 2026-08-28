@@ -14,6 +14,7 @@ from crawler import build_schedule_dataframe, enrich_record_with_game_list  # no
 from dashboard import (  # noqa: E402
 	build_matchup_records,
 	build_postseason_matchup_history,
+	build_team_recent_summary,
 	canonical_postseason_team,
 	postseason_series_summaries,
 )
@@ -169,6 +170,35 @@ class PostseasonSeriesTests(unittest.TestCase):
 		self.assertEqual(wild_card["winner"], "4위팀")
 		self.assertEqual(wild_card["state"], "종료")
 		self.assertIn("4위 어드밴티지", wild_card["note"])
+
+
+class DashboardSummaryTests(unittest.TestCase):
+	def test_recent_summary_includes_average_errors_from_last_ten_games(self) -> None:
+		team = pd.DataFrame(
+			[
+				{
+					"game_id": f"game-{index:02d}",
+					"game_date": pd.Timestamp("2026-08-01") + pd.Timedelta(days=index),
+					"game_start_time": "18:30",
+					"team": "KT",
+					"result": "W" if index % 2 == 0 else "L",
+					"win_flag": int(index % 2 == 0),
+					"loss_flag": int(index % 2 == 1),
+					"draw_flag": 0,
+					"runs_for": 5,
+					"runs_against": 4,
+					"run_diff": 1,
+					"hits_for": 9,
+					"errors_for": index,
+				}
+				for index in range(12)
+			]
+		)
+
+		summary = build_team_recent_summary(team, 10)
+
+		self.assertEqual(int(summary.iloc[0]["games"]), 10)
+		self.assertAlmostEqual(float(summary.iloc[0]["avg_errors_for"]), 6.5)
 
 
 if __name__ == "__main__":

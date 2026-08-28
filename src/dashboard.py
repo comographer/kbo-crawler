@@ -1509,7 +1509,17 @@ def render_league_recent10_table(summary: pd.DataFrame) -> None:
 		plot_empty("최근 10경기 데이터가 없습니다.")
 		return
 
-	headers = ["팀", "최근 10경기 (승/패/무)", "득점", "실점", "득실차", "평균 득점", "평균 실점", "평균 안타"]
+	headers = [
+		"팀",
+		"최근 10경기 (승/패/무)",
+		"득점",
+		"실점",
+		"득실차",
+		"평균 득점",
+		"평균 실점",
+		"평균 안타",
+		"평균 실책",
+	]
 	rows = []
 	for _, row in summary.iterrows():
 		team = str(row.get("team") or "")
@@ -1523,6 +1533,7 @@ def render_league_recent10_table(summary: pd.DataFrame) -> None:
 			html.escape(format_float(row.get("avg_runs_for"), 2)),
 			html.escape(format_float(row.get("avg_runs_against"), 2)),
 			html.escape(format_float(row.get("avg_hits_for"), 2)),
+			html.escape(format_float(row.get("avg_errors_for"), 2)),
 		]
 		rows.append("<tr>" + "".join(f"<td>{cell}</td>" for cell in cells) + "</tr>")
 
@@ -2025,6 +2036,7 @@ def build_team_recent_summary(team_frame: pd.DataFrame, n: int = 10) -> pd.DataF
 			avg_runs_for=("runs_for", "mean"),
 			avg_runs_against=("runs_against", "mean"),
 			avg_hits_for=("hits_for", "mean"),
+			avg_errors_for=("errors_for", "mean"),
 		)
 		.reset_index()
 	)
@@ -3173,36 +3185,6 @@ def render_matchups(
 	render_matchup_matrix(matchups, rank_order, matrix_teams=matrix_teams)
 
 
-def phase_run_diff_bar(summary: pd.DataFrame) -> go.Figure:
-	plot_frame = summary.sort_values(["after_5_run_diff", "first_5_run_diff"], ascending=[False, False]).copy()
-	teams = plot_frame["team"].astype(str).tolist()
-	colors = [team_color(team) for team in teams]
-	fig = go.Figure()
-	fig.add_bar(
-		x=teams,
-		y=plot_frame["first_5_run_diff"],
-		name="5회까지",
-		marker_color=colors,
-		text=plot_frame["first_5_run_diff"],
-		textposition="outside",
-		cliponaxis=False,
-	)
-	fig.add_bar(
-		x=teams,
-		y=plot_frame["after_5_run_diff"],
-		name="6회 이후",
-		marker_color=colors,
-		marker_pattern_shape="/",
-		marker_pattern_solidity=0.25,
-		text=plot_frame["after_5_run_diff"],
-		textposition="outside",
-		cliponaxis=False,
-	)
-	fig.update_traces(texttemplate="%{text:,.0f}")
-	fig.update_layout(barmode="group", yaxis_title="득실", xaxis_title="팀")
-	return apply_layout(fig)
-
-
 def latest_selected_season(team: pd.DataFrame, selected_years: list[str]) -> int | None:
 	if "season_year" not in team.columns:
 		return None
@@ -3410,10 +3392,6 @@ def render_rank_trend(
 
 
 FLOW_COLUMNS = [
-	"first_5_runs_for",
-	"first_5_runs_against",
-	"after_5_runs_for",
-	"after_5_runs_against",
 	"comeback_win",
 	"blown_loss",
 	"walkoff_win",
@@ -3435,10 +3413,6 @@ def build_flow_summary(team: pd.DataFrame) -> pd.DataFrame:
 		final_team.groupby("team", dropna=False)
 		.agg(
 			games=("game_id", "count"),
-			first_5_runs_for=("first_5_runs_for", "sum"),
-			first_5_runs_against=("first_5_runs_against", "sum"),
-			after_5_runs_for=("after_5_runs_for", "sum"),
-			after_5_runs_against=("after_5_runs_against", "sum"),
 			comeback_win=("comeback_win", "sum"),
 			blown_loss=("blown_loss", "sum"),
 			walkoff_win=("walkoff_win", "sum"),
@@ -3446,8 +3420,6 @@ def build_flow_summary(team: pd.DataFrame) -> pd.DataFrame:
 		)
 		.reset_index()
 	)
-	summary["first_5_run_diff"] = summary["first_5_runs_for"] - summary["first_5_runs_against"]
-	summary["after_5_run_diff"] = summary["after_5_runs_for"] - summary["after_5_runs_against"]
 	return summary
 
 
@@ -3475,9 +3447,6 @@ def render_flow_insights(
 
 	left, right = st.columns(2)
 	with left:
-		st.subheader("팀별 전반 / 후반 득실")
-		st.plotly_chart(phase_run_diff_bar(summary), width="stretch")
-	with right:
 		st.subheader("역전승 / 역전패")
 		fig = paired_team_bar(
 			summary,
@@ -3489,9 +3458,7 @@ def render_flow_insights(
 			title_y="경기",
 		)
 		st.plotly_chart(fig, width="stretch")
-
-	left, right = st.columns([1, 1])
-	with left:
+	with right:
 		st.subheader("끝내기승 / 끝내기패")
 		fig = paired_team_bar(
 			summary,
@@ -3503,26 +3470,26 @@ def render_flow_insights(
 			title_y="경기",
 		)
 		st.plotly_chart(fig, width="stretch")
-	with right:
-		st.subheader("최다 연승 / 최다 연패")
-		if streak_extremes.empty:
-			plot_empty("연승/연패 데이터가 없습니다.")
-		else:
-			fig = paired_team_bar(
-				streak_extremes,
-				team_column="team",
-				first_column="max_win_streak",
-				second_column="max_loss_streak",
-				first_name="최다 연승",
-				second_name="최다 연패",
-				title_y="경기",
-			)
-			st.plotly_chart(fig, width="stretch")
+
+	st.subheader("최다 연승 / 최다 연패")
+	if streak_extremes.empty:
+		plot_empty("연승/연패 데이터가 없습니다.")
+	else:
+		fig = paired_team_bar(
+			streak_extremes,
+			team_column="team",
+			first_column="max_win_streak",
+			second_column="max_loss_streak",
+			first_name="최다 연승",
+			second_name="최다 연패",
+			title_y="경기",
+		)
+		st.plotly_chart(fig, width="stretch")
 
 	render_rank_trend(full_team, filter_selections)
 
 
-def render_attendance(schedule: pd.DataFrame, home_team_source: pd.DataFrame, duration_team: pd.DataFrame) -> None:
+def render_attendance(schedule: pd.DataFrame, home_team_source: pd.DataFrame) -> None:
 	final_schedule = schedule[schedule["game_status"] == "final"].dropna(subset=["crowd"]).copy()
 	home_team = home_team_source[(home_team_source["is_final"]) & (home_team_source["home_away"] == "home")].dropna(subset=["crowd"]).copy()
 
@@ -3591,29 +3558,33 @@ def render_attendance(schedule: pd.DataFrame, home_team_source: pd.DataFrame, du
 			)
 			st.plotly_chart(apply_layout(fig), width="stretch")
 	with right:
-		st.subheader("팀별 평균 경기시간")
-		team_duration = (
-			duration_team[duration_team["is_final"]]
-			.dropna(subset=["game_duration_min"])
+		st.subheader("홈팀별 누적 관중")
+		team_crowd = (
+			home_team
 			.groupby("team")
-			.agg(games=("game_id", "count"), avg_duration=("game_duration_min", "mean"))
+			.agg(games=("game_id", "count"), total_crowd=("crowd", "sum"))
 			.reset_index()
-			.sort_values("avg_duration", ascending=False)
+			.sort_values("total_crowd", ascending=False)
 		)
-		if team_duration.empty:
-			plot_empty("팀별 경기시간 데이터가 없습니다.")
+		if team_crowd.empty:
+			plot_empty("홈팀별 누적 관중 데이터가 없습니다.")
 		else:
 			fig = px.bar(
-				team_duration,
+				team_crowd,
 				x="team",
-				y="avg_duration",
+				y="total_crowd",
 				color="team",
 				color_discrete_map=active_team_colors(),
-				text="avg_duration",
-				labels={"team": "팀", "avg_duration": "평균 경기시간(분)", "games": "경기"},
+				text="total_crowd",
+				labels={"team": "팀", "total_crowd": "누적 관중", "games": "경기"},
 			)
 			fig.update_layout(showlegend=False)
-			fig.update_traces(texttemplate="%{text:,.0f}", textposition="outside", cliponaxis=False)
+			fig.update_traces(
+				texttemplate="%{text:,.0f}",
+				textposition="outside",
+				cliponaxis=False,
+				hovertemplate="%{x}<br>누적 관중 %{y:,.0f}명<extra></extra>",
+			)
 			st.plotly_chart(apply_layout(fig), width="stretch")
 
 
@@ -3782,7 +3753,6 @@ def main() -> None:
 			render_attendance(
 				filtered_postseason_schedule,
 				filtered_postseason_team,
-				filtered_postseason_team,
 			)
 		return
 
@@ -3820,7 +3790,7 @@ def main() -> None:
 	with flow_tab:
 		render_flow_insights(filtered_schedule, filtered_team, team, filter_selections)
 	with attendance_tab:
-		render_attendance(attendance_schedule, attendance_team, filtered_team)
+		render_attendance(attendance_schedule, attendance_team)
 	with games_tab:
 		render_games(filtered_schedule, filtered_team)
 

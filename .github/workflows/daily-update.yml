@@ -2,7 +2,8 @@ name: Daily KBO update
 
 on:
   schedule:
-    - cron: "55 14 * * *"
+    # Queue early to absorb GitHub scheduler delays; the job waits until 23:00 KST.
+    - cron: "30 13 * * *"
   workflow_dispatch:
 
 permissions:
@@ -16,6 +17,8 @@ jobs:
   update:
     runs-on: ubuntu-latest
     timeout-minutes: 180
+    env:
+      TZ: Asia/Seoul
 
     steps:
       - name: Check out main
@@ -41,5 +44,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+      - name: Wait until 23:00 KST
+        if: github.event_name == 'schedule'
+        run: |
+          target_epoch="$(date -u -d "$(date -u +%F) 14:00:00" +%s)"
+          now_epoch="$(date -u +%s)"
+          wait_seconds="$((target_epoch - now_epoch))"
+          if [ "$wait_seconds" -gt 0 ] && [ "$wait_seconds" -le 3600 ]; then
+            sleep "$wait_seconds"
+          fi
+
       - name: Crawl and publish KBO data
-        run: python src/main.py --daily --year 2026 --push
+        run: python src/main.py --daily --year "$(date +%Y)" --push
