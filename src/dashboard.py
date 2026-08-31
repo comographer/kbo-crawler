@@ -713,10 +713,12 @@ def magic_number_css() -> str:
 			"text": "#E8EEF1",
 			"magic_bg": "rgba(77, 166, 104, 0.14)",
 			"magic": "#80C991",
+			"contested_bg": "rgba(214, 166, 58, 0.18)",
+			"contested": "#E7C15A",
 			"tragic_bg": "rgba(184, 92, 92, 0.14)",
 			"tragic": "#E09898",
-			"secured_bg": "#274A72",
-			"secured": "#C6DCF5",
+			"secured_bg": "#24533A",
+			"secured": "#BCE8C9",
 			"unavailable_bg": "#5B282B",
 			"unavailable": "#F0C2C4",
 		}
@@ -729,10 +731,12 @@ def magic_number_css() -> str:
 			"text": "#263238",
 			"magic_bg": "#EAF5ED",
 			"magic": "#2E7D47",
+			"contested_bg": "#FFF1BE",
+			"contested": "#876100",
 			"tragic_bg": "#F8EAEA",
 			"tragic": "#A84444",
-			"secured_bg": "#D8E8F8",
-			"secured": "#245B91",
+			"secured_bg": "#CDEAD5",
+			"secured": "#1F6B3A",
 			"unavailable_bg": "#E7C2C4",
 			"unavailable": "#842F34",
 		}
@@ -750,6 +754,7 @@ def magic_number_css() -> str:
 	.magic-number-note > span {{flex: 0 0 auto; white-space: nowrap;}}
 	.magic-number-note .legend-mark {{font-weight: 800;}}
 	.magic-number-note .legend-magic {{color: {colors['magic']};}}
+	.magic-number-note .legend-contested {{color: {colors['contested']};}}
 	.magic-number-note .legend-tragic {{color: {colors['tragic']};}}
 	.magic-number-note .legend-secured {{color: {colors['secured']};}}
 	.magic-number-note .legend-unavailable {{color: {colors['unavailable']};}}
@@ -832,6 +837,7 @@ def magic_number_css() -> str:
 		border-radius: 5px;
 	}}
 	.number-cell.magic {{background: {colors['magic_bg']}; color: {colors['magic']};}}
+	.number-cell.contested {{background: {colors['contested_bg']}; color: {colors['contested']};}}
 	.number-cell.tragic {{background: {colors['tragic_bg']}; color: {colors['tragic']};}}
 	.number-value {{font-size: 1rem; font-weight: 800; line-height: 1.05;}}
 	.magic-status-cell {{padding: 0.54rem 0.34rem !important;}}
@@ -2215,18 +2221,35 @@ def build_magic_number_table(
 	return standings
 
 
-def magic_number_cell_html(row: pd.Series, target_rank: int) -> str:
+def magic_number_display_kind(row: pd.Series, target_rank: int) -> str:
 	kind = str(row.get(f"target_{target_rank}_kind") or "magic")
 	number = row.get(f"target_{target_rank}_number")
+	if pd.isna(number) or int(number) <= 0:
+		return kind
+	current_rank = standing_value(row, "rank")
+	# The two teams straddling a target rank are an unresolved race, not a
+	# one-direction magic/tragic countdown.
+	return "contested" if current_rank in {target_rank, target_rank + 1} else kind
+
+
+def magic_number_cell_html(row: pd.Series, target_rank: int) -> str:
+	kind = str(row.get(f"target_{target_rank}_kind") or "magic")
+	display_kind = magic_number_display_kind(row, target_rank)
+	number = row.get(f"target_{target_rank}_number")
 	team = str(row.get("team") or "-")
-	if pd.isna(number):
+	if display_kind == "contested":
+		value = str(standing_value(row, "remaining"))
+	elif pd.isna(number):
 		value = "-"
 	else:
 		value = str(int(number))
-	meaning = "매직넘버" if kind == "magic" else "트래직넘버"
-	title = f"{team} {target_rank}위 {meaning}"
+	if display_kind == "contested":
+		title = f"{team} {target_rank}위 경합 · 팀 잔여 {value}경기"
+	else:
+		meaning = "매직넘버" if kind == "magic" else "트래직넘버"
+		title = f"{team} {target_rank}위 {meaning}"
 	return (
-		f'<div class="number-cell {html.escape(kind)}" title="{html.escape(title)}">'
+		f'<div class="number-cell {html.escape(display_kind)}" title="{html.escape(title)}">'
 		f'<span class="number-value">{html.escape(value)}</span></div>'
 	)
 
@@ -2337,9 +2360,11 @@ def render_magic_numbers(team: pd.DataFrame) -> None:
 
 	st.markdown(
 		'<div class="magic-number-note"><span class="legend-mark legend-magic">매직넘버</span>'
+		'<span>·</span><span class="legend-mark legend-contested">경합</span>'
 		'<span>·</span><span class="legend-mark legend-tragic">트래직넘버</span>'
 		'<span>·</span><span class="legend-mark legend-secured">확보</span>'
 		'<span>·</span><span class="legend-mark legend-unavailable">불가</span>'
+		'<span>· 경합: 목표 순위 경계의 두 팀 · 숫자는 각 팀 잔여 경기</span>'
 		'<span>· 향후 무승부 및 동률 결정 제외</span></div>',
 		unsafe_allow_html=True,
 	)

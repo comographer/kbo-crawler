@@ -16,6 +16,8 @@ from dashboard import (  # noqa: E402
 	build_postseason_matchup_history,
 	build_team_recent_summary,
 	canonical_postseason_team,
+	magic_number_cell_html,
+	magic_number_display_kind,
 	postseason_series_summaries,
 )
 
@@ -199,6 +201,41 @@ class DashboardSummaryTests(unittest.TestCase):
 
 		self.assertEqual(int(summary.iloc[0]["games"]), 10)
 		self.assertAlmostEqual(float(summary.iloc[0]["avg_errors_for"]), 6.5)
+
+
+class MagicNumberTests(unittest.TestCase):
+	def test_target_boundary_teams_show_remaining_games_as_contested(self) -> None:
+		samsung = pd.Series(
+			{"rank": 1, "remaining": 29, "target_1_kind": "magic", "target_1_number": 31}
+		)
+		kt = pd.Series(
+			{"rank": 2, "remaining": 32, "target_1_kind": "tragic", "target_1_number": 31}
+		)
+		lg = pd.Series(
+			{"rank": 4, "remaining": 28, "target_3_kind": "tragic", "target_3_number": 29}
+		)
+
+		self.assertEqual(magic_number_display_kind(samsung, 1), "contested")
+		self.assertEqual(magic_number_display_kind(kt, 1), "contested")
+		self.assertEqual(magic_number_display_kind(lg, 3), "contested")
+		samsung_html = magic_number_cell_html(samsung, 1)
+		self.assertIn('number-cell contested', samsung_html)
+		self.assertIn('<span class="number-value">29</span>', samsung_html)
+		kt_html = magic_number_cell_html(kt, 1)
+		self.assertIn('<span class="number-value">32</span>', kt_html)
+		lg_html = magic_number_cell_html(lg, 3)
+		self.assertIn('<span class="number-value">28</span>', lg_html)
+
+	def test_teams_outside_target_boundary_keep_direction_color(self) -> None:
+		magic = pd.Series(
+			{"rank": 1, "remaining": 29, "target_2_kind": "magic", "target_2_number": 24}
+		)
+		tragic = pd.Series(
+			{"rank": 4, "remaining": 28, "target_2_kind": "tragic", "target_2_number": 26}
+		)
+
+		self.assertEqual(magic_number_display_kind(magic, 2), "magic")
+		self.assertEqual(magic_number_display_kind(tragic, 2), "tragic")
 
 
 if __name__ == "__main__":
