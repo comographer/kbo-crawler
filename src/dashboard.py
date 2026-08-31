@@ -2226,10 +2226,7 @@ def magic_number_display_kind(row: pd.Series, target_rank: int) -> str:
 	number = row.get(f"target_{target_rank}_number")
 	if pd.isna(number) or int(number) <= 0:
 		return kind
-	current_rank = standing_value(row, "rank")
-	# The two teams straddling a target rank are an unresolved race, not a
-	# one-direction magic/tragic countdown.
-	return "contested" if current_rank in {target_rank, target_rank + 1} else kind
+	return "contested" if int(number) > standing_value(row, "remaining") else kind
 
 
 def magic_number_cell_html(row: pd.Series, target_rank: int) -> str:
@@ -2364,7 +2361,7 @@ def render_magic_numbers(team: pd.DataFrame) -> None:
 		'<span>·</span><span class="legend-mark legend-tragic">트래직넘버</span>'
 		'<span>·</span><span class="legend-mark legend-secured">확보</span>'
 		'<span>·</span><span class="legend-mark legend-unavailable">불가</span>'
-		'<span>· 경합: 목표 순위 경계의 두 팀 · 숫자는 각 팀 잔여 경기</span>'
+		'<span>· 경합: 계산값이 팀 잔여 경기보다 큰 경우 · 숫자는 팀 잔여 경기</span>'
 		'<span>· 향후 무승부 및 동률 결정 제외</span></div>',
 		unsafe_allow_html=True,
 	)
