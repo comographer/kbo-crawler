@@ -14,10 +14,12 @@ from crawler import build_schedule_dataframe, enrich_record_with_game_list  # no
 from dashboard import (  # noqa: E402
 	build_matchup_records,
 	build_postseason_matchup_history,
+	build_result_score_averages,
 	build_team_recent_summary,
 	canonical_postseason_team,
 	magic_number_cell_html,
 	magic_number_display_kind,
+	paired_team_bar,
 	postseason_series_summaries,
 )
 
@@ -175,6 +177,33 @@ class PostseasonSeriesTests(unittest.TestCase):
 
 
 class DashboardSummaryTests(unittest.TestCase):
+	def test_result_score_averages_separate_wins_and_losses(self) -> None:
+		team = pd.DataFrame(
+			[
+				{"team": "KT", "is_final": True, "result": "W", "runs_for": 5},
+				{"team": "KT", "is_final": True, "result": "W", "runs_for": 7},
+				{"team": "KT", "is_final": True, "result": "L", "runs_for": 2},
+				{"team": "KT", "is_final": True, "result": "L", "runs_for": 4},
+				{"team": "KT", "is_final": True, "result": "D", "runs_for": 20},
+			]
+		)
+
+		summary = build_result_score_averages(team).iloc[0]
+
+		self.assertAlmostEqual(float(summary["win_avg_score"]), 6.0)
+		self.assertAlmostEqual(float(summary["loss_avg_score"]), 3.0)
+		figure = paired_team_bar(
+			build_result_score_averages(team),
+			team_column="team",
+			first_column="win_avg_score",
+			second_column="loss_avg_score",
+			first_name="승리시 평균점수",
+			second_name="패배시 평균점수",
+			title_y="평균 득점",
+			texttemplate="%{text:,.2f}",
+		)
+		self.assertTrue(all(trace.texttemplate == "%{text:,.2f}" for trace in figure.data))
+
 	def test_recent_summary_includes_average_errors_from_last_ten_games(self) -> None:
 		team = pd.DataFrame(
 			[

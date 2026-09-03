@@ -1787,6 +1787,7 @@ def paired_team_bar(
 	first_name: str,
 	second_name: str,
 	title_y: str,
+	texttemplate: str = "%{text:,.0f}",
 ) -> go.Figure:
 	plot_frame = frame.sort_values(first_column, ascending=False).copy()
 	teams = plot_frame[team_column].astype(str).tolist()
@@ -1812,7 +1813,7 @@ def paired_team_bar(
 		textposition="outside",
 		cliponaxis=False,
 	)
-	fig.update_traces(texttemplate="%{text:,.0f}")
+	fig.update_traces(texttemplate=texttemplate)
 	fig.update_layout(barmode="group", yaxis_title=title_y, xaxis_title="팀")
 	return apply_layout(fig)
 
@@ -2080,6 +2081,29 @@ def build_period_streak_extremes(team_frame: pd.DataFrame) -> pd.DataFrame:
 				max_loss = max(max_loss, current_count)
 		rows.append({"team": team, "max_win_streak": max_win, "max_loss_streak": max_loss})
 	return pd.DataFrame(rows)
+
+
+def build_result_score_averages(team_frame: pd.DataFrame) -> pd.DataFrame:
+	decision_frame = team_frame[
+		team_frame["is_final"] & team_frame["result"].isin({"W", "L"})
+	].dropna(subset=["runs_for"]).copy()
+	if decision_frame.empty:
+		return pd.DataFrame(columns=["team", "win_avg_score", "loss_avg_score"])
+
+	summary = (
+		decision_frame.pivot_table(
+			index="team",
+			columns="result",
+			values="runs_for",
+			aggfunc="mean",
+		)
+		.rename(columns={"W": "win_avg_score", "L": "loss_avg_score"})
+		.reset_index()
+	)
+	for column in ("win_avg_score", "loss_avg_score"):
+		if column not in summary.columns:
+			summary[column] = pd.NA
+	return summary[["team", "win_avg_score", "loss_avg_score"]]
 
 
 def build_standings(team_frame: pd.DataFrame) -> pd.DataFrame:
@@ -3460,6 +3484,7 @@ def render_flow_insights(
 	final_schedule = schedule[schedule["game_status"] == "final"].copy()
 	extra_games = final_schedule[final_schedule["extra_inning_flag"].fillna(0) == 1].copy()
 	streak_extremes = build_period_streak_extremes(team)
+	result_score_averages = build_result_score_averages(team)
 	metric_cols = st.columns(5)
 	metric_cols[0].metric("연장 경기", format_int(len(extra_games)))
 	metric_cols[1].metric("역전승", format_int(summary["comeback_win"].sum()))
@@ -3493,20 +3518,38 @@ def render_flow_insights(
 		)
 		st.plotly_chart(fig, width="stretch")
 
-	st.subheader("최다 연승 / 최다 연패")
-	if streak_extremes.empty:
-		plot_empty("연승/연패 데이터가 없습니다.")
-	else:
-		fig = paired_team_bar(
-			streak_extremes,
-			team_column="team",
-			first_column="max_win_streak",
-			second_column="max_loss_streak",
-			first_name="최다 연승",
-			second_name="최다 연패",
-			title_y="경기",
-		)
-		st.plotly_chart(fig, width="stretch")
+	left, right = st.columns(2)
+	with left:
+		st.subheader("최다 연승 / 최다 연패")
+		if streak_extremes.empty:
+			plot_empty("연승/연패 데이터가 없습니다.")
+		else:
+			fig = paired_team_bar(
+				streak_extremes,
+				team_column="team",
+				first_column="max_win_streak",
+				second_column="max_loss_streak",
+				first_name="최다 연승",
+				second_name="최다 연패",
+				title_y="경기",
+			)
+			st.plotly_chart(fig, width="stretch")
+	with right:
+		st.subheader("승리/패배시 평균점수")
+		if result_score_averages.empty:
+			plot_empty("승리/패배 평균점수 데이터가 없습니다.")
+		else:
+			fig = paired_team_bar(
+				result_score_averages,
+				team_column="team",
+				first_column="win_avg_score",
+				second_column="loss_avg_score",
+				first_name="승리시 평균점수",
+				second_name="패배시 평균점수",
+				title_y="평균 득점",
+				texttemplate="%{text:,.2f}",
+			)
+			st.plotly_chart(fig, width="stretch")
 
 	render_rank_trend(full_team, filter_selections)
 
