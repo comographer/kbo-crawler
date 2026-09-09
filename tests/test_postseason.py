@@ -177,6 +177,35 @@ class PostseasonSeriesTests(unittest.TestCase):
 
 
 class DashboardSummaryTests(unittest.TestCase):
+	def test_matchup_records_exclude_unselected_opponents(self) -> None:
+		team = pd.DataFrame(
+			[
+				{
+					"game_id": "kt-lg",
+					"team": "KT",
+					"opponent": "LG",
+					"home_away": "home",
+					"win_flag": 1,
+					"loss_flag": 0,
+					"draw_flag": 0,
+				},
+				{
+					"game_id": "kt-kia",
+					"team": "KT",
+					"opponent": "KIA",
+					"home_away": "away",
+					"win_flag": 0,
+					"loss_flag": 1,
+					"draw_flag": 0,
+				},
+			]
+		)
+
+		matchups = build_matchup_records(team, ["KT", "LG"])
+
+		self.assertEqual(matchups[["team", "opponent"]].to_dict("records"), [{"team": "KT", "opponent": "LG"}])
+		self.assertNotIn("KIA", set(matchups["opponent"]))
+
 	def test_result_score_averages_separate_wins_and_losses(self) -> None:
 		team = pd.DataFrame(
 			[

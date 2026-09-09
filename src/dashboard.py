@@ -3107,7 +3107,19 @@ def aggregate_matchup_records(frame: pd.DataFrame, scope: str) -> pd.DataFrame:
 	return grouped
 
 
-def build_matchup_records(final_frame: pd.DataFrame) -> pd.DataFrame:
+def build_matchup_records(
+	final_frame: pd.DataFrame,
+	matchup_teams: list[str] | None = None,
+) -> pd.DataFrame:
+	if matchup_teams is not None:
+		allowed_teams = set(matchup_teams)
+		final_frame = final_frame[
+			final_frame["team"].isin(allowed_teams)
+			& final_frame["opponent"].isin(allowed_teams)
+		].copy()
+	if final_frame.empty:
+		return pd.DataFrame(columns=["team", "opponent"])
+
 	matchups = aggregate_matchup_records(final_frame, "overall")
 	for home_away, scope in (("home", "home"), ("away", "away")):
 		split = aggregate_matchup_records(final_frame[final_frame["home_away"] == home_away], scope)
@@ -3214,7 +3226,7 @@ def render_matchups(
 	if final_frame.empty:
 		matchups = pd.DataFrame(columns=["team", "opponent"])
 	else:
-		matchups = build_matchup_records(final_frame)
+		matchups = build_matchup_records(final_frame, matrix_teams)
 	if scope_caption:
 		st.caption(scope_caption)
 	st.markdown(matchup_matrix_css(), unsafe_allow_html=True)
@@ -3851,7 +3863,9 @@ def main() -> None:
 	with magic_tab:
 		render_magic_numbers(team)
 	with matchup_tab:
-		render_matchups(filtered_team, rank_order)
+		selected_teams = set(filter_selections["teams"])
+		matchup_teams = [team for team in rank_order if team in selected_teams]
+		render_matchups(filtered_team, rank_order, matrix_teams=matchup_teams)
 	with flow_tab:
 		render_flow_insights(filtered_schedule, filtered_team, team, filter_selections)
 	with attendance_tab:
