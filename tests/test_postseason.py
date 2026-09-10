@@ -17,10 +17,13 @@ from dashboard import (  # noqa: E402
 	build_result_score_averages,
 	build_team_recent_summary,
 	canonical_postseason_team,
+	game_matchup_html,
+	game_result_html,
 	magic_number_cell_html,
 	magic_number_display_kind,
 	paired_team_bar,
 	postseason_series_summaries,
+	team_color,
 )
 
 
@@ -177,6 +180,16 @@ class PostseasonSeriesTests(unittest.TestCase):
 
 
 class DashboardSummaryTests(unittest.TestCase):
+	def test_game_table_formatters_apply_team_and_result_colors(self) -> None:
+		matchup_html = game_matchup_html("KIA @ LG")
+
+		self.assertIn(team_color("KIA"), matchup_html)
+		self.assertIn(team_color("LG"), matchup_html)
+		self.assertIn("KIA", matchup_html)
+		self.assertIn("LG", matchup_html)
+		self.assertIn('class="game-result game-result-W"', game_result_html("W"))
+		self.assertIn('class="game-result game-result-L"', game_result_html("L"))
+
 	def test_matchup_records_exclude_unselected_opponents(self) -> None:
 		team = pd.DataFrame(
 			[

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import html
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -362,6 +363,12 @@ def theme_css(dark_mode: bool) -> str:
 		.result-W {background-color: #3D7A5F;}
 		.result-L {background-color: #B85C5C;}
 		.result-D {background-color: #7A7F87;}
+		.game-result {font-weight: 800;}
+		.game-result-W {color: #78A9FF;}
+		.game-result-L {color: #F08080;}
+		.game-result-D {color: #B6C4CB;}
+		.game-matchup {display: inline-flex; align-items: center; gap: 0.38rem; white-space: nowrap;}
+		.game-matchup-separator {color: #82939C; font-weight: 650;}
 		.form-result {
 			display: inline-flex;
 			align-items: center;
@@ -430,6 +437,36 @@ def theme_css(dark_mode: bool) -> str:
 	section[data-testid="stSidebar"] div[data-baseweb="select"] > div {
 		border-color: #D5DBDF;
 	}
+	.kbo-table-wrap {
+		max-height: 520px;
+		overflow: auto;
+		border: 1px solid #DDE4E8;
+		border-radius: 6px;
+		background-color: #FFFFFF;
+	}
+	.kbo-table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.88rem;
+	}
+	.kbo-table th {
+		position: sticky;
+		top: 0;
+		background-color: #F4F7F8;
+		color: #263238;
+		border-bottom: 1px solid #DDE4E8;
+		padding: 0.45rem 0.55rem;
+		text-align: left;
+		white-space: nowrap;
+	}
+	.kbo-table td {
+		background-color: #FFFFFF;
+		color: #263238;
+		border-bottom: 1px solid #E9EEF1;
+		padding: 0.4rem 0.55rem;
+		white-space: nowrap;
+	}
+	.kbo-table tr:nth-child(even) td {background-color: #FAFBFC;}
 	.standings-table-wrap {
 		border: 1px solid #DDE4E8;
 		border-radius: 8px;
@@ -542,6 +579,12 @@ def theme_css(dark_mode: bool) -> str:
 	.result-W {background-color: #3D7A5F;}
 	.result-L {background-color: #B85C5C;}
 	.result-D {background-color: #7A7F87;}
+	.game-result {font-weight: 800;}
+	.game-result-W {color: #1565C0;}
+	.game-result-L {color: #C62828;}
+	.game-result-D {color: #6D7A80;}
+	.game-matchup {display: inline-flex; align-items: center; gap: 0.38rem; white-space: nowrap;}
+	.game-matchup-separator {color: #78909C; font-weight: 650;}
 	.form-result {
 		display: inline-flex;
 		align-items: center;
@@ -1455,8 +1498,13 @@ def format_cell(value: Any) -> str:
 	return str(value)
 
 
-def render_table(frame: pd.DataFrame, column_config: dict[str, Any] | None = None) -> None:
-	if not ACTIVE_DARK_MODE:
+def render_table(
+	frame: pd.DataFrame,
+	column_config: dict[str, Any] | None = None,
+	cell_formatters: dict[str, Callable[[Any], str]] | None = None,
+) -> None:
+	cell_formatters = cell_formatters or {}
+	if not ACTIVE_DARK_MODE and not cell_formatters:
 		st.dataframe(
 			frame,
 			hide_index=True,
@@ -1465,11 +1513,21 @@ def render_table(frame: pd.DataFrame, column_config: dict[str, Any] | None = Non
 		)
 		return
 
-	display = frame.copy()
-	for column in display.columns:
-		display[column] = display[column].map(format_cell)
-	html = display.to_html(index=False, escape=True, classes="kbo-table")
-	st.markdown(f'<div class="kbo-table-wrap">{html}</div>', unsafe_allow_html=True)
+	header_html = "".join(f"<th>{html.escape(str(column))}</th>" for column in frame.columns)
+	rows = []
+	for _, row in frame.iterrows():
+		cells = []
+		for column in frame.columns:
+			value = row[column]
+			formatter = cell_formatters.get(str(column))
+			cell = formatter(value) if formatter else html.escape(format_cell(value))
+			cells.append(f"<td>{cell}</td>")
+		rows.append(f"<tr>{''.join(cells)}</tr>")
+	st.markdown(
+		f'<div class="kbo-table-wrap"><table class="kbo-table">'
+		f'<thead><tr>{header_html}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>',
+		unsafe_allow_html=True,
+	)
 
 
 def render_recent_games_table(recent: pd.DataFrame) -> None:
@@ -1625,6 +1683,11 @@ def render_team_extreme_table(
 			metric_label: st.column_config.NumberColumn(metric_label, format="%.0f"),
 			"관중": st.column_config.NumberColumn("관중", format="%d"),
 		},
+		cell_formatters={
+			"팀": team_chip_html,
+			"상대": team_chip_html,
+			"결과": game_result_html,
+		},
 	)
 
 
@@ -1647,6 +1710,29 @@ def team_chip_html(team: Any) -> str:
 	return (
 		f'<span class="team-chip" style="color:{html.escape(color)}">'
 		f'<span class="team-dot" style="background-color:{html.escape(color)}"></span>{html.escape(team_name)}</span>'
+	)
+
+
+def game_result_html(result: Any) -> str:
+	result_text = str(result or "")
+	result_class = result_text if result_text in FINAL_RESULTS else "D"
+	return (
+		f'<span class="game-result game-result-{result_class}">'
+		f'{html.escape(result_text)}</span>'
+	)
+
+
+def game_matchup_html(matchup: Any) -> str:
+	matchup_text = str(matchup or "")
+	teams = matchup_text.split(" @ ", maxsplit=1)
+	if len(teams) != 2:
+		return html.escape(matchup_text)
+	return (
+		'<span class="game-matchup">'
+		f'{team_chip_html(teams[0])}'
+		'<span class="game-matchup-separator">@</span>'
+		f'{team_chip_html(teams[1])}'
+		'</span>'
 	)
 
 
@@ -2911,7 +2997,7 @@ def render_postseason_overview(
 	if games.empty:
 		st.info("선택한 조건에 포스트시즌 경기가 없습니다.")
 	else:
-		render_table(games)
+		render_table(games, cell_formatters={"원정": team_chip_html, "홈": team_chip_html})
 
 
 def render_postseason_games(schedule: pd.DataFrame) -> None:
@@ -2926,7 +3012,7 @@ def render_postseason_games(schedule: pd.DataFrame) -> None:
 	if games.empty:
 		st.info("선택한 조건에 포스트시즌 경기가 없습니다.")
 	else:
-		render_table(games)
+		render_table(games, cell_formatters={"원정": team_chip_html, "홈": team_chip_html})
 
 
 def render_overview(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
@@ -3728,7 +3814,7 @@ def render_games(schedule: pd.DataFrame, team: pd.DataFrame) -> None:
 			"note": "비고",
 		}
 	)
-	render_table(table)
+	render_table(table, cell_formatters={"경기": game_matchup_html})
 
 
 def main() -> None:
