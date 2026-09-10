@@ -171,7 +171,7 @@ def theme_css(dark_mode: bool) -> str:
 			background-color: #0E1519;
 			color: #D7E0E5;
 		}
-		.block-container {padding-top: 1.5rem; padding-bottom: 1.5rem;}
+		.block-container {padding-top: 1.5rem; padding-bottom: 5rem;}
 		h1, h2, h3, h4, h5, h6, p, label, span, div {
 			color: #DCE5E9;
 		}
@@ -414,7 +414,7 @@ def theme_css(dark_mode: bool) -> str:
 		color: #263238;
 	}
 	section[data-testid="stSidebar"] {background-color: #F5F7F8;}
-	.block-container {padding-top: 1.5rem; padding-bottom: 1.5rem;}
+	.block-container {padding-top: 1.5rem; padding-bottom: 5rem;}
 	[data-testid="stMetricValue"] {font-size: 1.55rem;}
 	[data-testid="stMetricLabel"] {color: #6D7A80; font-size: 0.875rem;}
 		.stTabs [data-baseweb="tab-list"] {gap: 0.5rem;}
