@@ -5756,7 +5756,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>한화</span><em><span>vs</span></em><span>LG</span>",
+          "Text": "<span>한화</span><em><span class=\"lose\">1</span><span>vs</span><span class=\"win\">2</span></em><span>LG</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -5765,7 +5765,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260919&gameId=20260919HHLG0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260919&gameId=20260919HHLG0&section=REVIEW' class='btn2 mr5' id='btnReview'>리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -5774,7 +5774,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260919&gameId=20260919HHLG0&section=HIGHLIGHT' class='btn2' id='btnHighlight' style='width:65px;'>하이라이트</a>",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -5837,7 +5837,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>삼성</span><em><span>vs</span></em><span>롯데</span>",
+          "Text": "<span>삼성</span><em><span class=\"lose\">3</span><span>vs</span><span class=\"win\">5</span></em><span>롯데</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -5846,7 +5846,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260919&gameId=20260919SSLT0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260919&gameId=20260919SSLT0&section=REVIEW' class='btn2 mr5' id='btnReview'>리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -5855,7 +5855,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260919&gameId=20260919SSLT0&section=HIGHLIGHT' class='btn2' id='btnHighlight' style='width:65px;'>하이라이트</a>",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -5918,7 +5918,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>두산</span><em><span>vs</span></em><span>KT</span>",
+          "Text": "<span>두산</span><em><span class=\"lose\">3</span><span>vs</span><span class=\"win\">15</span></em><span>KT</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -5927,7 +5927,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260919&gameId=20260919OBKT0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260919&gameId=20260919OBKT0&section=REVIEW' class='btn2 mr5' id='btnReview'>리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -5936,7 +5936,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260919&gameId=20260919OBKT0&section=HIGHLIGHT' class='btn2' id='btnHighlight' style='width:65px;'>하이라이트</a>",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -5999,7 +5999,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>KIA</span><em><span>vs</span></em><span>NC</span>",
+          "Text": "<span>KIA</span><em><span class=\"win\">5</span><span>vs</span><span class=\"lose\">1</span></em><span>NC</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -6008,7 +6008,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260919&gameId=20260919HTNC0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260919&gameId=20260919HTNC0&section=REVIEW' class='btn2 mr5' id='btnReview'>리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -6017,7 +6017,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260919&gameId=20260919HTNC0&section=HIGHLIGHT' class='btn2' id='btnHighlight' style='width:65px;'>하이라이트</a>",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -7853,7 +7853,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260927&gameId=20260927KTOB0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -7934,7 +7934,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260927&gameId=20260927HHLT0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -8015,7 +8015,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260927&gameId=20260927LGHT0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -8096,7 +8096,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260927&gameId=20260927WONC0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
