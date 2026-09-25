@@ -7349,7 +7349,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260925&gameId=20260925LTOB0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -7394,7 +7394,7 @@
           "TypeObj": null
         },
         {
-          "Text": "-",
+          "Text": "우천취소",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -7430,7 +7430,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260925&gameId=20260925SSSK0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -7475,7 +7475,7 @@
           "TypeObj": null
         },
         {
-          "Text": "-",
+          "Text": "우천취소",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -7502,7 +7502,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>한화</span><em><span>vs</span></em><span>NC</span>",
+          "Text": "<span>한화</span><em><span class=\"lose\">7</span><span>vs</span><span class=\"win\">8</span></em><span>NC</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -7511,7 +7511,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260925&gameId=20260925HHNC0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260925&gameId=20260925HHNC0&section=REVIEW' class='btn2 mr5' id='btnReview'>리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -7520,7 +7520,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260925&gameId=20260925HHNC0&section=HIGHLIGHT' class='btn2' id='btnHighlight' style='width:65px;'>하이라이트</a>",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
