@@ -50,7 +50,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SS-T<br />SPO-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -131,7 +131,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "MS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -212,7 +212,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-2T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -293,7 +293,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KN-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -383,7 +383,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KN-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -464,7 +464,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -545,7 +545,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "MS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -626,7 +626,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-2T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -707,7 +707,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -779,7 +779,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261004&gameId=20261004HTLG0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -797,7 +797,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -860,7 +860,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261004&gameId=20261004OBSS0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -878,7 +878,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KN-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -941,7 +941,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261004&gameId=20261004SKNC0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -959,7 +959,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-2T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -1022,7 +1022,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261004&gameId=20261004WOHH0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -1040,7 +1040,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "MS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -1103,7 +1103,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261004&gameId=20261004LTKT0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -1121,7 +1121,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
