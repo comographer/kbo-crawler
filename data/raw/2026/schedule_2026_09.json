@@ -8852,7 +8852,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20260930&gameId=20260930LGSK0&section=HIGHLIGHT' class='btn2' id='btnHighlight' style='width:65px;'>하이라이트</a>",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
