@@ -1211,7 +1211,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-2T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -1292,7 +1292,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -1373,7 +1373,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KN-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -1454,7 +1454,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -1535,7 +1535,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "MS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -1625,7 +1625,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-2T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -1706,7 +1706,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -1787,7 +1787,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "MS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -1868,7 +1868,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KN-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -1949,7 +1949,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -2039,7 +2039,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-2T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -2120,7 +2120,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -2201,7 +2201,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KN-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -2282,7 +2282,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "MS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -2363,7 +2363,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -2453,7 +2453,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-2T<br />MS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -2534,7 +2534,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KN-T<br />SPO-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -2615,7 +2615,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -2669,7 +2669,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<b>17:00</b>",
+          "Text": "<b>14:00</b>",
           "Class": "time",
           "Scope": null,
           "RowSpan": null,
@@ -2687,7 +2687,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261010&gameId=20261010LGLT0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -2705,7 +2705,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SS-T<br />SPO-2T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -2768,7 +2768,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261010&gameId=20261010SKHT0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -2786,7 +2786,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SPO-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -2849,7 +2849,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261010&gameId=20261010NCHH0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -2867,7 +2867,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "MS-T<br />KN-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -2957,7 +2957,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SS-T<br />SPO-2T<br />MS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -3038,7 +3038,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KN-T<br />SPO-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -3128,7 +3128,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "SS-T<br />SPO-2T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -3209,7 +3209,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KN-T<br />SPO-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -3290,7 +3290,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "MS-T",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
