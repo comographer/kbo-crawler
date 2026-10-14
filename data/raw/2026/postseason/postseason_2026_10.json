@@ -23,7 +23,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>두산</span><em><span>vs</span></em><span>LG</span>",
+          "Text": "<span>두산</span><em><span class=\"lose\">1</span><span>vs</span><span class=\"win\">4</span></em><span>LG</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -32,7 +32,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261014&gameId=20261014OBLG0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261014&gameId=20261014OBLG0&section=REVIEW' class='btn2 mr5' id='btnReview'>리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -41,7 +41,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261014&gameId=20261014OBLG0&section=HIGHLIGHT' class='btn2' id='btnHighlight' style='width:65px;'>하이라이트</a>",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -78,96 +78,6 @@
         },
         {
           "Text": "WC 1차전",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        }
-      ],
-      "Class": null,
-      "OnClick": null,
-      "Style": null,
-      "Value": null,
-      "Id": null
-    },
-    {
-      "row": [
-        {
-          "Text": "10.15(목)",
-          "Class": "day",
-          "Scope": null,
-          "RowSpan": "1",
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "<b>18:30</b>",
-          "Class": "time",
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "<span>두산</span><em><span>vs</span></em><span>LG</span>",
-          "Class": "play",
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261015&gameId=20261015OBLG0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
-          "Class": "relay",
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "K-2T",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "잠실",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "WC 2차전",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -293,7 +203,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>WC<br/>승리팀</span><em><span>vs</span></em><span>KIA</span>",
+          "Text": "<span>LG</span><em><span>vs</span></em><span>KIA</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -302,7 +212,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261017&gameId=20261017LGHT0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -347,7 +257,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "준PO 1차전",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -383,7 +293,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>WC<br/>승리팀</span><em><span>vs</span></em><span>KIA</span>",
+          "Text": "<span>LG</span><em><span>vs</span></em><span>KIA</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -392,7 +302,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261018&gameId=20261018LGHT0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -437,7 +347,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "준PO 2차전",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -563,7 +473,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>KIA</span><em><span>vs</span></em><span>WC<br/>승리팀</span>",
+          "Text": "<span>KIA</span><em><span>vs</span></em><span>LG</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -572,7 +482,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261020&gameId=20261020HTLG0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -617,7 +527,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "준PO 3차전",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -653,7 +563,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>KIA</span><em><span>vs</span></em><span>WC<br/>승리팀</span>",
+          "Text": "<span>KIA</span><em><span>vs</span></em><span>LG</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -662,7 +572,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261021&gameId=20261021HTLG0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -707,7 +617,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "준PO 4차전",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -833,7 +743,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>WC<br/>승리팀</span><em><span>vs</span></em><span>KIA</span>",
+          "Text": "<span>LG</span><em><span>vs</span></em><span>KIA</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -887,7 +797,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "준PO 5차전",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
