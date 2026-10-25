@@ -8,14 +8,32 @@
           "Text": "11.01(일)",
           "Class": "day",
           "Scope": null,
+          "RowSpan": "1",
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "<b>14:00</b>",
+          "Class": "time",
+          "Scope": null,
           "RowSpan": null,
           "ColSpan": null,
           "Width": null,
           "TypeObj": null
         },
         {
-          "Text": "",
-          "Class": null,
+          "Text": "<span>KIA</span><em><span>vs</span></em><span>삼성</span>",
+          "Class": "play",
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261101&gameId=20261101HTSS0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Class": "relay",
           "Scope": null,
           "RowSpan": null,
           "ColSpan": null,
@@ -50,7 +68,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "대구",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -59,25 +77,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "이동일",
+          "Text": "PO 5차전",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
