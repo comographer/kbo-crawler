@@ -98,23 +98,14 @@
           "Text": "11.02(월)",
           "Class": "day",
           "Scope": null,
-          "RowSpan": "1",
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "<b>18:30</b>",
-          "Class": "time",
-          "Scope": null,
           "RowSpan": null,
           "ColSpan": null,
           "Width": null,
           "TypeObj": null
         },
         {
-          "Text": "<span>PO<br/>승리팀</span><em><span>vs</span></em><span>KT</span>",
-          "Class": "play",
+          "Text": "",
+          "Class": null,
           "Scope": null,
           "RowSpan": null,
           "ColSpan": null,
@@ -123,7 +114,16 @@
         },
         {
           "Text": "",
-          "Class": "relay",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "",
+          "Class": null,
           "Scope": null,
           "RowSpan": null,
           "ColSpan": null,
@@ -158,7 +158,7 @@
           "TypeObj": null
         },
         {
-          "Text": "수원",
+          "Text": "",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -167,7 +167,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "이동일",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -278,6 +278,96 @@
           "Text": "11.04(수)",
           "Class": "day",
           "Scope": null,
+          "RowSpan": "1",
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "<b>18:30</b>",
+          "Class": "time",
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "<span>PO<br/>승리팀</span><em><span>vs</span></em><span>KT</span>",
+          "Class": "play",
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "",
+          "Class": "relay",
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "수원",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        }
+      ],
+      "Class": null,
+      "OnClick": null,
+      "Style": null,
+      "Value": null,
+      "Id": null
+    },
+    {
+      "row": [
+        {
+          "Text": "11.05(목)",
+          "Class": "day",
+          "Scope": null,
           "RowSpan": null,
           "ColSpan": null,
           "Width": null,
@@ -348,96 +438,6 @@
         },
         {
           "Text": "이동일",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        }
-      ],
-      "Class": null,
-      "OnClick": null,
-      "Style": null,
-      "Value": null,
-      "Id": null
-    },
-    {
-      "row": [
-        {
-          "Text": "11.05(목)",
-          "Class": "day",
-          "Scope": null,
-          "RowSpan": "1",
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "<b>18:30</b>",
-          "Class": "time",
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "<span>KT</span><em><span>vs</span></em><span>PO<br/>승리팀</span>",
-          "Class": "play",
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "",
-          "Class": "relay",
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "미정",
-          "Class": null,
-          "Scope": null,
-          "RowSpan": null,
-          "ColSpan": null,
-          "Width": null,
-          "TypeObj": null
-        },
-        {
-          "Text": "",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -638,6 +638,96 @@
           "Text": "11.08(일)",
           "Class": "day",
           "Scope": null,
+          "RowSpan": "1",
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "<b>14:00</b>",
+          "Class": "time",
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "<span>KT</span><em><span>vs</span></em><span>PO<br/>승리팀</span>",
+          "Class": "play",
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "",
+          "Class": "relay",
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "미정",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        },
+        {
+          "Text": "",
+          "Class": null,
+          "Scope": null,
+          "RowSpan": null,
+          "ColSpan": null,
+          "Width": null,
+          "TypeObj": null
+        }
+      ],
+      "Class": null,
+      "OnClick": null,
+      "Style": null,
+      "Value": null,
+      "Id": null
+    },
+    {
+      "row": [
+        {
+          "Text": "11.09(월)",
+          "Class": "day",
+          "Scope": null,
           "RowSpan": null,
           "ColSpan": null,
           "Width": null,
@@ -725,7 +815,7 @@
     {
       "row": [
         {
-          "Text": "11.09(월)",
+          "Text": "11.10(화)",
           "Class": "day",
           "Scope": null,
           "RowSpan": "1",
@@ -815,7 +905,7 @@
     {
       "row": [
         {
-          "Text": "11.10(화)",
+          "Text": "11.11(수)",
           "Class": "day",
           "Scope": null,
           "RowSpan": "1",
