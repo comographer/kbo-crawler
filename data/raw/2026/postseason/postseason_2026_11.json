@@ -23,7 +23,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>KIA</span><em><span>vs</span></em><span>삼성</span>",
+          "Text": "<span>KIA</span><em><span class=\"lose\">1</span><span>vs</span><span class=\"win\">6</span></em><span>삼성</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -32,7 +32,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261101&gameId=20261101HTSS0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261101&gameId=20261101HTSS0&section=REVIEW' class='btn2 mr5' id='btnReview'>리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -41,7 +41,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261101&gameId=20261101HTSS0&section=HIGHLIGHT' class='btn2' id='btnHighlight' style='width:65px;'>하이라이트</a>",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -203,7 +203,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>PO<br/>승리팀</span><em><span>vs</span></em><span>KT</span>",
+          "Text": "<span>삼성</span><em><span>vs</span></em><span>KT</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -212,7 +212,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261103&gameId=20261103SSKT0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -257,7 +257,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KS 1차전",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -293,7 +293,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>PO<br/>승리팀</span><em><span>vs</span></em><span>KT</span>",
+          "Text": "<span>삼성</span><em><span>vs</span></em><span>KT</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -302,7 +302,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261104&gameId=20261104SSKT0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -347,7 +347,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KS 2차전",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -473,7 +473,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>KT</span><em><span>vs</span></em><span>PO<br/>승리팀</span>",
+          "Text": "<span>KT</span><em><span>vs</span></em><span>삼성</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -482,7 +482,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261106&gameId=20261106KTSS0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -518,7 +518,7 @@
           "TypeObj": null
         },
         {
-          "Text": "미정",
+          "Text": "대구",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -527,7 +527,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KS 3차전",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -563,7 +563,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>KT</span><em><span>vs</span></em><span>PO<br/>승리팀</span>",
+          "Text": "<span>KT</span><em><span>vs</span></em><span>삼성</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -572,7 +572,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261107&gameId=20261107KTSS0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -608,7 +608,7 @@
           "TypeObj": null
         },
         {
-          "Text": "미정",
+          "Text": "대구",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -617,7 +617,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KS 4차전",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -653,7 +653,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>KT</span><em><span>vs</span></em><span>PO<br/>승리팀</span>",
+          "Text": "<span>KT</span><em><span>vs</span></em><span>삼성</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -662,7 +662,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "<a href='/Schedule/GameCenter/Main.aspx?gameDate=20261108&gameId=20261108KTSS0&section=START_PIT' class='btn2' id='btnPreView'>프리뷰</a>",
           "Class": "relay",
           "Scope": null,
           "RowSpan": null,
@@ -698,7 +698,7 @@
           "TypeObj": null
         },
         {
-          "Text": "미정",
+          "Text": "대구",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -707,7 +707,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KS 5차전",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -833,7 +833,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>PO<br/>승리팀</span><em><span>vs</span></em><span>KT</span>",
+          "Text": "<span>삼성</span><em><span>vs</span></em><span>KT</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -887,7 +887,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KS 6차전",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
@@ -923,7 +923,7 @@
           "TypeObj": null
         },
         {
-          "Text": "<span>PO<br/>승리팀</span><em><span>vs</span></em><span>KT</span>",
+          "Text": "<span>삼성</span><em><span>vs</span></em><span>KT</span>",
           "Class": "play",
           "Scope": null,
           "RowSpan": null,
@@ -977,7 +977,7 @@
           "TypeObj": null
         },
         {
-          "Text": "",
+          "Text": "KS 7차전",
           "Class": null,
           "Scope": null,
           "RowSpan": null,
